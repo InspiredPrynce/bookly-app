@@ -50,4 +50,16 @@ abstract interface class BookRepository {
     required List<ChapterDraft> chapters,
     required List<BookLinkDraft> links,
   });
+
+  /// Every book in the public catalog (§1.3, option C), newest first.
+  ///
+  /// A read, not a search: there is no query text because the catalog
+  /// is meant to be *browsed* — it is what the reader sees the moment
+  /// they sign in, and filtering a shelf you have not looked at yet is
+  /// a thing to add when the shelf is long enough to need it.
+  ///
+  /// Newest first rather than by title: a book someone added this
+  /// morning is the one they most want to find, and alphabetising puts
+  /// it wherever the letter happens to land.
+  Future<List<Book>> all();
 }

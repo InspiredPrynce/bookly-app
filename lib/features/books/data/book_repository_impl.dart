@@ -156,6 +156,16 @@ class BookRepositoryImpl implements BookRepository {
 
   // ── Internals ───────────────────────────────────────────────────────────
 
+  @override
+  Future<List<Book>> all() => _guard(() async {
+        final rows = await _client
+            .from('books')
+            .select(_bookColumns)
+            .order('created_at', ascending: false);
+
+        return [for (final row in rows) _toBook(row)];
+      });
+
   static const _bookColumns = 'id, created_by, title, authors, about, '
       'cover_path, upload_path, created_at, updated_at';
 

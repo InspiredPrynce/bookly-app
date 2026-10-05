@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import '../data/book_repository_impl.dart';
 import '../domain/book_link_draft.dart';
 import '../domain/book_repository.dart';
 import '../domain/chapter_draft.dart';
+import 'catalog_controller.dart';
 import 'create_book_state.dart';
 
 final createBookControllerProvider =
@@ -81,6 +83,12 @@ class CreateBookController extends Notifier<CreateBookState> {
             chapters: chapters,
             links: links,
           );
+
+      // The shelf the reader is about to land on must already know
+      // about this book. Left alone, Catalog would keep whatever it
+      // loaded before and the new book would be absent from the very
+      // list that is supposed to be its proof of existence.
+      unawaited(ref.read(catalogControllerProvider.notifier).load());
 
       state = CreateBookState(createdBookId: book.id);
       return book.id;
