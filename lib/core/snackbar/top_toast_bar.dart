@@ -169,7 +169,12 @@ class _TopToastBarState extends State<TopToastBar>
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(scheme.icon, size: 20, color: scheme.mark),
+                          BooklyIcon(
+                            scheme.icon,
+                            size: 20,
+                            color: scheme.mark,
+                            semanticLabel: scheme.semanticLabel,
+                          ),
                           const SizedBox(width: BooklySpace.sm),
                           Expanded(
                             child: Column(
@@ -200,8 +205,8 @@ class _TopToastBarState extends State<TopToastBar>
                           IconButton(
                             onPressed: _dismiss,
                             tooltip: 'Dismiss',
-                            icon: Icon(
-                              Icons.close,
+                            icon: BooklyIcon(
+                              BooklyIconKind.close,
                               size: 20,
                               color: colors.textSecondary,
                             ),
@@ -227,7 +232,7 @@ class _TopToastBarState extends State<TopToastBar>
   }
 }
 
-/// Tone → ground, hinge mark and icon.
+/// Tone → ground, hinge mark, icon and the icon's spoken label.
 ///
 /// Grounds are the `*Subtle` tokens, which are authored to carry `text` at
 /// full contrast in both modes; marks are their strong counterparts. `help`
@@ -237,38 +242,50 @@ class _TopToastBarState extends State<TopToastBar>
 ///
 /// No `danger`/`error` split here: the two are the same *look*, differing
 /// only in where they appear (bar vs. inline under a field).
-({IconData icon, Color ground, Color mark}) _schemeFor(
+///
+/// The label rides in the same record because severity is otherwise carried
+/// by colour and glyph shape alone — both invisible to a screen reader — so
+/// the one thing the bar exists to say would reach it as undifferentiated
+/// prose.
+({BooklyIconKind icon, String semanticLabel, Color ground, Color mark})
+    _schemeFor(
   BooklyColors colors,
   ToastTone tone,
 ) =>
     switch (tone) {
       ToastTone.success => (
-          icon: Icons.check_circle_outline,
+          icon: BooklyIconKind.circleCheck,
+          semanticLabel: 'Success',
           ground: colors.successSubtle,
           mark: colors.success,
         ),
       ToastTone.error => (
-          icon: Icons.error_outline,
+          icon: BooklyIconKind.circleAlert,
+          semanticLabel: 'Error',
           ground: colors.dangerSubtle,
           mark: colors.danger,
         ),
       ToastTone.danger => (
-          icon: Icons.error_outline,
+          icon: BooklyIconKind.circleAlert,
+          semanticLabel: 'Error',
           ground: colors.dangerSubtle,
           mark: colors.danger,
         ),
       ToastTone.warning => (
-          icon: Icons.warning_amber_outlined,
+          icon: BooklyIconKind.triangleAlert,
+          semanticLabel: 'Warning',
           ground: colors.warningSubtle,
           mark: colors.warning,
         ),
       ToastTone.info => (
-          icon: Icons.info_outline,
+          icon: BooklyIconKind.info,
+          semanticLabel: 'Information',
           ground: colors.infoSubtle,
           mark: colors.info,
         ),
       ToastTone.help => (
-          icon: Icons.lightbulb_outline,
+          icon: BooklyIconKind.lightbulb,
+          semanticLabel: 'Hint',
           ground: colors.accentSubtle,
           mark: colors.accentSubtleText,
         ),

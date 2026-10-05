@@ -44,7 +44,9 @@ dependencies:
   flutter_secure_storage: ^11.2.0
   flutter_svg: ^2.3.0
   flutter_animate: ^4.5.2
-  lottie: ^3.6.1
+  # Deliberately no `lottie`: the splash draws `BooklyMark` and the project
+  # has no animation asset for it to play. Add it back only in the same
+  # change as an actual .json — PLAN.md §4.8.
   share_plus: ^13.3.1
   url_launcher: ^6.3.3
   audio_session: ^0.2.4
@@ -79,6 +81,12 @@ flutter:
     - assets/logo/3.0x/
     - assets/icon/
     - assets/sound/
+
+    # Lucide glyphs, vendored (PLAN.md §4.3). Registered as a directory so
+    # adding an icon is a file plus an enum member, with no edit here.
+    # `assets/icons/README.md` sits one level up and is deliberately not
+    # bundled.
+    - assets/icons/lucide/
 
   # Literary Clothbound type stack — bundled, never fetched at runtime.
   #

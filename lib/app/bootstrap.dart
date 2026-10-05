@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/config/env.dart';
+import '../core/config/firebase_options.dart';
 import '../core/sound/bookly_sound_player.dart';
 import 'app.dart';
 import 'flavor/flavor.dart';
@@ -18,7 +20,7 @@ import 'flavor/flavor.dart';
 /// 2. [_loadConfig] — reads the `--dart-define-from-file` values and fails
 ///    fast if they belong to the other flavor.
 /// 3. [_initSupabase] — the backend client, keyed by [Env].
-/// 4. [_initFirebase] — messaging.
+/// 4. [_initFirebase] — Firebase, keyed by [Env.flavor].
 ///
 /// Then the widget tree goes up behind a [ProviderScope] so every downstream
 /// provider can reach what was initialised here.
@@ -34,7 +36,7 @@ Future<void> bootstrap({required Flavor flavor}) async {
   final env = _loadConfig(flavor);
 
   await _initSupabase(env);
-  await _initFirebase();
+  await _initFirebase(env);
 
   runApp(ProviderScope(child: BooklyApp(env: env)));
 
@@ -68,6 +70,32 @@ Future<void> _initSupabase(Env env) => Supabase.initialize(
       publishableKey: env.supabaseAnonKey,
     );
 
-/// Firebase messaging. Requires `google-services.json` per flavor, produced
-/// by `flutterfire configure`.
-Future<void> _initFirebase() => Firebase.initializeApp();
+/// Firebase, with the options chosen by flavor instead of read from
+/// `google-services.json`.
+///
+/// The `google-services` Gradle plugin is deliberately not applied: it wants
+/// exactly one `google-services.json`, while Bookly ships two application
+/// ids, and selecting that file by source set is one more moving part than
+/// the values it produces. [BooklyFirebaseOptions] carries those same values
+/// directly — but that only works if they are passed in. Called with no
+/// `options`, [Firebase.initializeApp] looks for resources the Gradle plugin
+/// never generated and throws before the first frame.
+///
+/// Android only. iOS has no registered Firebase app yet, and handing an
+/// Android `appId` to the iOS SDK would initialise "successfully" against
+/// the wrong app — the silent misconfiguration [Flavor.fromName] exists to
+/// rule out (PLAN.md §4).
+Future<void> _initFirebase(Env env) {
+  if (defaultTargetPlatform != TargetPlatform.android) {
+    throw UnsupportedError(
+      'Firebase is configured for Android only. Register an iOS app for '
+      'project bookly-57cbb (bundle id com.pragma.bookly) and re-run '
+      'flutterfire configure --platforms=ios before running on '
+      '${defaultTargetPlatform.name}.',
+    );
+  }
+
+  return Firebase.initializeApp(
+    options: BooklyFirebaseOptions.forFlavor(env.flavor),
+  );
+}

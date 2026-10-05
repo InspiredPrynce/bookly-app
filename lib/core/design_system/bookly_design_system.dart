@@ -28,6 +28,11 @@ export 'components/bubble_kind.dart';
 export 'components/member_avatar.dart';
 export 'components/reading_progress_bar.dart';
 
+// Icons — Lucide, vendored as SVG (PLAN.md §4.3). The kind is split from
+// the widget by the same §0.1 rule that puts every enum in its own file.
+export 'icons/bookly_icon.dart';
+export 'icons/bookly_icon_kind.dart';
+
 // Motion — the page transition itself, so navigation and design share one
 // definition of PLAN.md §4.7 rather than each holding a copy of it.
 export 'motion/shared_axis_x.dart';

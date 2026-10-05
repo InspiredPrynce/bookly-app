@@ -18,7 +18,7 @@
 | **Reusable widgets** | Anything used twice is extracted to a shared widget. |
 | **Stack** | Riverpod · feature-first · repository layer · `go_router` · `supabase_flutter`. |
 | **Flavors** | `dev` / `prod` via `--dart-define-from-file`. |
-| **UI/motion** | Splash screen first · Lottie · heavy animation · **top-anchored** snackbar · chime on snackbar presentation · single notification sound. |
+| **UI/motion** | Splash screen first · `BooklyMark` (Lottie dropped — §4.8) · heavy animation · **top-anchored** snackbar · chime on snackbar presentation · single notification sound. |
 | **User instructions override docs** | Where `branding/DESIGN.md` disagrees with an explicit user instruction, the user wins (e.g. top-anchored toast overrides §9 bottom-center). |
 
 ### 0.2 Repository layout
@@ -26,7 +26,7 @@
 ```
 bookly/
 ├── PLAN.md                          ← this file
-├── branding/                        ← design kit (source of truth for visual rules)
+├── branding/                        ← design kit (superseded by Literary Clothbound; provenance only)
 │   ├── DESIGN.md
 │   ├── README.md
 │   ├── notification.mp3             ← the single chime
@@ -331,75 +331,169 @@ No stack traces, no raw payloads (DESIGN.md §12).
 
 ---
 
-## Section 4 · Design system, motion, snackbar, sound ✅ (revised)
+## Section 4 · Design system, motion, snackbar, sound ✅ (as built)
 
-> **Revised after discovering `branding/`.** The provided design package is adopted **wholesale** as the visual source of truth.
+> **Literary Clothbound supersedes `branding/DESIGN.md`.** The branding package
+> informed the first pass; what ships is its own system, rebuilt in
+> `lib/core/design_system/`. Where this section and `branding/**` disagree,
+> this section is right. Where this section and a user instruction disagree,
+> the instruction wins.
 
 ### 4.1 Source of truth
 
-`branding/DESIGN.md` governs colors, typography, components, motion, a11y. Rule from that doc: *if doc and tokens disagree, tokens win* — **except** where a user instruction overrides.
+`lib/core/design_system/` governs color, type, motion and components.
+`branding/**` is provenance and reference only — excluded from analysis in
+`analysis_options.yaml`, so it is never a lint surface.
 
-### 4.2 Typography — Raleway
+The branding doc's rule still holds *within* this system: if doc and tokens
+disagree, tokens win.
 
-- **UI weight 500. Never 300 or lighter.**
-- Old-style figures need `lnum` / `tnum` → use `BooklyType.numeric` for numbers.
-- Chapter notes and Gemini answers: `BooklyType.reading`, capped at `BooklyBreakpoint.readingMaxWidth` (**640dp**).
+### 4.2 Typography — Literary Clothbound
 
-### 4.3 Icons — **Lucide**
+A dual-voiced editorial hierarchy in three families, **bundled in
+`assets/fonts/` and registered in `pubspec.yaml`**. `google_fonts` was
+removed: runtime font fetching makes the first frame network-dependent and
+breaks test hermeticity by firing async HTTP inside `FakeAsync`.
 
-24px grid, 1.75px stroke. No mixed libraries.
+| Voice | Family | Carries |
+|---|---|---|
+| Literary | **Playfair Display** | display, headlines, pull-quotes (italic) |
+| Reading | **Literata** | body copy, sustained reading |
+| Bibliographic | **Inter** | labels, metadata, metrics, buttons |
+
+The scale lives in `BooklyType` (`bookly_typography.dart`):
+`display`/`displayMobile` · `headlineLg`/`LgMobile`/`Md`/`Sm` ·
+`pullQuote`/`pullQuoteLg` · `bodyLg`/`Md`/`Sm` · `reading` · `bodyMdItalic` ·
+`labelLg`/`Md`/`Sm` · `button`.
+
+- **UI weight 500 minimum. Never 300 or lighter.**
+- `label*` tokens are rendered **uppercase at the call site** with their
+  expansive tracking, to mimic book-spine stamping. `TextStyle` has no case
+  property, so the conversion happens where the `Text` is built — treat that
+  as part of the token.
+- `display*`/`headline*` are **never** uppercased — sentence and title case
+  preserved so serifs and ligatures show.
+- Figures: `BooklyType.lining` (default) and `BooklyType.numeric`
+  (lining + tabular) for reading metrics and page indices.
+- Chapter notes and Gemini answers: `BooklyType.reading` — Literata 18/31.5,
+  line-height **1.75** — capped at `BooklyBreakpoint.readingMaxWidth` (**640dp**).
+
+### 4.3 Icons — Lucide, vendored as SVG
+
+24px grid, **1.75px stroke**, no mixed libraries.
+
+Sources sit in `assets/icons/lucide/` (ISC) and are registered as a
+*directory* in `pubspec.yaml`, so adding an icon is one file plus one enum
+member — no pubspec edit to forget. Everything renders through **`BooklyIcon`**
+(`lib/core/design_system/icons/`); `Icon(Icons.*)` appears nowhere in `lib/`.
+
+**Why vendored rather than reached through an `IconData` package:** `IconData`
+is a font glyph and the stroke weight is cut into the typeface — no argument
+reaches it, so nothing built on `IconData` can hit 1.75px on a 24 grid.
+Reading the SVG makes the weight ours. Lucide ships `stroke-width="2"`; every
+vendored file differs from upstream in exactly that one attribute, which keeps
+a re-vendor a one-line diff.
+
+- `BooklyIconKind` (own file) maps member → upstream filename; members are
+  named for what the glyph *depicts*, never for the tone it currently serves.
+- `BooklyIcon` resolves color through an explicit `ColorFilter`
+  (`BlendMode.srcIn`) because `flutter_svg`'s `color` is deprecated in 2.x and
+  `currentColor` resolves from `SvgTheme` — defaulting to black — rather than
+  from the widget's arguments.
+- `semanticLabel` opts an icon into the semantics tree; without it the glyph
+  is excluded rather than announced as unlabelled.
+- Provenance, the one-line edit and re-vendoring steps: `assets/icons/README.md`
+  (deliberately *not* bundled). The ISC notice ships as
+  `assets/icons/lucide/LICENSE`, but a bundled file is not a file a reader can
+  read — Phase 3 Settings still needs an in-app licenses entry, since
+  Flutter's automatic `LicenseRegistry` only collects pubspec dependencies.
 
 ### 4.4 Packages
 
 ```yaml
 flutter_riverpod  go_router  supabase_flutter  firebase_core  firebase_messaging
 flutter_local_notifications  timezone  flutter_secure_storage  flutter_svg
-flutter_animate  lottie  share_plus  url_launcher  audio_session  just_audio
-image_picker  flutter_compress  intl  envied|--dart-define-from-file
+flutter_animate  share_plus  url_launcher  audio_session  just_audio
+image_picker  flutter_image_compress  intl  shared_preferences  cupertino_icons
 ```
 
-- **Animated SVG package: dropped** (option B) → `flutter_svg` + `flutter_animate`, `lottie` only where genuinely needed.
-- `awesome_snackbar` **vendored and modified**, not added as a dependency.
+- Configuration is **`--dart-define-from-file=env/<flavor>.json`** — not
+  `envied`, which would generate getters we then have to keep in sync by hand.
+- **`lottie` removed** (§4.8); the snackbar is **owned, not vendored** —
+  zero pubspec dependency (`lib/core/snackbar/`), so `awesome_snackbar` is not
+  a dependency either.
+- Android needs **core library desugaring** for `flutter_local_notifications`.
+- `cupertino_icons` is the template default and `lib/` uses no
+  `CupertinoIcons` — a candidate for deletion.
 
-### 4.5 Snackbar — vendored, top-anchored, chime-bound
+### 4.5 Snackbar — owned, top-anchored, chime-bound
 
-Adapted from `show_me_love_app/lib/utils/toasts/custom_snack_bar.dart`:
+`lib/core/snackbar/`, five files: `bookly_toast.dart` (the call),
+`bookly_overlay.dart` (navigator key + `OverlayEntry`), `top_toast_bar.dart`
+(the bar), `toast_request.dart`, `chime_on_present.dart`.
 
 | Decision | Value |
 |---|---|
 | Mechanism | `OverlayEntry` (not `ScaffoldMessenger`) |
 | Anchor | **top-anchored** — overrides DESIGN.md §9 bottom-center per explicit user instruction |
 | Queueing | **replace, never queue** — a new toast dismisses the current one |
-| Chime | fired from **`_ChimeOnPresent.initState`** — presentation *is* the trigger |
+| Chime | fired from **`ChimeOnPresent.initState`** — presentation *is* the trigger |
 | Order | **haptic before audio** |
 | Audio | `audio_session` configured for `ambient` + `sonification` |
+| Tone | 3px hinge rule + `BooklyIcon` on a `*Subtle` ground — never a tinted bar |
 
 ### 4.6 Sound — one sound
 
-- Single asset: `branding/notification.mp3` — used for **every** toast *and* bottom-sheet action.
+- Single asset: **`assets/sound/notification.mp3`** — used for **every** toast
+  *and* bottom-sheet action.
 - `enum BookSound { notification }` (own file).
 - **`ToastTone → sound` mapping removed** — tone affects visual styling only.
-- One player per sound instance (`show_me_love_app/lib/common/sounds/sml_sound_player.dart`, GetX stripped).
+- One player per sound instance: `lib/core/sound/bookly_sound_player.dart`.
 
 ### 4.7 Motion matrix
 
 | Transition | Duration | Easing |
 |---|---|---|
-| Page push/pop — **shared-axis X** + Hero (covers, avatars) | **320ms (`dur-slow`)** | standard |
+| Page push/pop — **shared-axis X** + Hero (covers, avatars) | **320ms (`BooklyMotion.slow`)** | standard |
 | Tab switch — **fade-through** | 320ms | standard |
 | Bottom sheet — **rise** | 320ms | decelerate |
-| Snackbar — top slide + fade | `dur-slow` | — |
-| Gemini shimmer — three-dot | `dur-slow`, static under reduced-motion | — |
+| Snackbar — top slide + fade | `slow` in / `fast` out | standard / exit |
+| Gemini shimmer — three-dot | `slow`, static under reduced-motion | — |
 
-> **No page-curl, no skeuomorphic page transitions.**
+- `SharedAxisXTransition` is **owned** by the design system; `package:animations`
+  is not a dependency.
+- No `pageTransitionsTheme` — every route supplies its own page. The duration
+  is read inside `pageBuilder` via `BooklyMotion.of`, which returns **zero**
+  under the OS reduce-motion setting.
+- **No page-curl, no skeuomorphic page transitions.**
 
 ### 4.8 Splash
 
-First screen. Lottie mark → resolve session → route to `/login` or `/catalog`.
+First screen: `const BooklyMark(size: 96)` → resolve session → route to
+`/login` or `/catalog`.
+
+- **No Lottie.** The dependency is gone, `lib/` imports it nowhere, and there
+  is no animation asset for it to play. Re-adding is one line, alongside an
+  actual `.json`.
+- The router has **no `redirect`**: the splash resolves its own session, so no
+  other route pays for that check on every navigation.
 
 ### 4.9 Design-system file split
 
-The 8 files in `branding/.../lib/design_system/` are copied into `lib/core/design_system/`, then **split per the one-class-per-file rule** (`bookly_components.dart` becomes `lib/core/design_system/components/*`).
+16 files, split per the one-class-per-file rule (PLAN.md §0.1) — no unrelated
+classes share a file, and every enum gets its own:
+
+```
+lib/core/design_system/
+  bookly_design_system.dart    barrel
+  bookly_colors.dart  bookly_tokens.dart  bookly_typography.dart
+  bookly_theme.dart  bookly_theme_mode.dart
+  components/  book_cover · bookly_chat_bubble · bubble_kind
+               member_avatar · reading_progress_bar
+  icons/       bookly_icon · bookly_icon_kind
+  logo/        bookly_lockup · bookly_mark
+  motion/      shared_axis_x
+```
 
 ### 4.10 Night-paper reading theme — **v1**
 
@@ -865,21 +959,25 @@ Settings
 
 ## Phase 0 · Foundation
 
-- [ ] Write `.gitignore` (exclude `env/*.json` except example, `supabase.txt`, `firebase.txt`, `gemini.txt`, `build/`, `*.keystore`) — **then** `git init`
-- [ ] `flutter create` with `com.pragma.bookly.app` + `.dev` suffix; flavors wired
-- [ ] `main_dev.dart` / `main_prod.dart` + `bootstrap(flavor:)`
-- [ ] `env/dev.example.json` committed; `env/dev.json` + `env/prod.json` created locally
-- [ ] Copy `branding/.../design_system/` → `lib/core/design_system/`, **split components per one-class-per-file**
-- [ ] Merge `pubspec_snippet.yaml`; add packages from §4.4; launcher icons from `branding/assets/`
-- [ ] Copy `branding/notification.mp3` → `assets/sound/`
-- [ ] `flutterfire configure --project=bookly-57cbb` for **both** flavors → `google-services.json` into each source set
-- [ ] Supabase migrations for all tables + RLS (§2) in `supabase/migrations/`
-- [ ] Core: `flavor.dart`, `env.dart`, `secure_storage.dart`, `supabase_client_provider.dart`, `failure.dart`, `toast_tone.dart`, `book_sound.dart`
-- [ ] Router skeleton with full route table + splash-first
-- [ ] Vendored top-anchored snackbar + chime-on-present (§4.5–4.6)
-- [ ] Motion matrix wired into `MaterialApp.pageTransitionsTheme` (§4.7)
+- [x] Write `.gitignore` (exclude `env/*.json` except example, `supabase.txt`, `firebase.txt`, `gemini.txt`, `build/`, `*.keystore`) — **then** `git init`
+- [x] `flutter create` with `com.pragma.bookly.app` + `.dev` suffix; flavors wired
+- [x] `main_dev.dart` / `main_prod.dart` + `bootstrap(flavor:)`
+- [x] `env/dev.example.json` committed; `env/dev.json` + `env/prod.json` created locally
+- [x] Rebuild `branding/.../design_system/` into `lib/core/design_system/` as **Literary Clothbound**, split per one-class-per-file — a rebuild, not a copy (§4.1)
+- [x] Merge `pubspec_snippet.yaml`; add packages from §4.4; launcher icons from `branding/assets/`
+- [x] Copy `branding/notification.mp3` → `assets/sound/`
+- [x] `flutterfire configure --project=bookly-57cbb` for **both** flavors → options in **`lib/core/config/firebase_options.dart`**. Deliberately *not* the Gradle plugin + `google-services.json` path: the flavors are two application ids, so the mapping lives in typed Dart and is committed (`.gitignore` keeps the CLI's default outputs out)
+- [x] Supabase migrations for all tables + RLS (§2) in `supabase/migrations/`
+- [x] Core: `flavor.dart`, `env.dart`, `secure_storage.dart`, `supabase_client_provider.dart`, `failure.dart`, `toast_tone.dart`, `book_sound.dart`
+- [x] Router skeleton with full route table + splash-first
+- [x] Vendored top-anchored snackbar + chime-on-present (§4.5–4.6)
+- [x] Motion matrix wired in each route's own `pageBuilder` (§4.7) — **not** `pageTransitionsTheme`, which cannot honour the reduce-motion override
 
 **Exit:** app launches on device in both flavors, splash → login, toast chimes at top.
+
+> ⚠️ **Exit not yet verified on-device.** The dev debug APK builds and bundles;
+> the splash → login → chime path has not been exercised on hardware. Run it
+> before treating Phase 0 as closed.
 
 ## Phase 1 · Auth · Books · Tracking
 
