@@ -16,6 +16,7 @@ abstract final class Routes {
 
   // ── Signed-in ───────────────────────────────────────────────────────────
   static const catalog = '/catalog';
+  static const newBook = '/books/new';
   static const notifications = '/notifications';
   static const suggestions = '/suggestions';
   static const settings = '/settings';

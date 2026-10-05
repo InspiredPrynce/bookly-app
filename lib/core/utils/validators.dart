@@ -50,4 +50,45 @@ abstract final class Validators {
     if (value == null || value.trim().isEmpty) return message;
     return null;
   }
+
+  /// The bound `books.title`, `chapters.title` and `book_links.title`
+  /// all share — every one of them is `char_length between 1 and 300`.
+  ///
+  /// One constant because it is one rule wearing three column names;
+  /// three constants would drift the first time one of them is widened.
+  static const titleMaxLength = 300;
+
+  /// A title for one of those three rows. [message] is asked for because
+  /// "enter a title" is wrong for a chapter and "enter a chapter title"
+  /// is wrong for a book, and the length half needs no wording of its
+  /// own — it is the same sentence whichever field it lands under.
+  static String? title(String? value, {required String message}) {
+    final v = value ?? '';
+    if (v.trim().isEmpty) return message;
+    if (v.length > titleMaxLength) {
+      return 'Keep it to $titleMaxLength characters or fewer.';
+    }
+    return null;
+  }
+
+  /// An external link (PLAN.md §5.2).
+  ///
+  /// Mirrors the column's own check — `url ~* '^https?://'` — closely
+  /// enough that a value this accepts is a value Postgres will take,
+  /// while staying a *shape* check: only the reader knows whether the
+  /// address leads somewhere, and refusing a well-formed URL because
+  /// Bookly could not reach it would reject a link that works fine for
+  /// everyone on a better connection.
+  static String? url(String? value) {
+    final v = value?.trim() ?? '';
+    if (v.isEmpty) return 'Enter a link.';
+
+    final uri = Uri.tryParse(v);
+    final scheme = uri?.scheme.toLowerCase();
+    final usable = uri != null &&
+        (scheme == 'http' || scheme == 'https') &&
+        uri.host.isNotEmpty;
+    if (!usable) return "That doesn't look like a web address.";
+    return null;
+  }
 }

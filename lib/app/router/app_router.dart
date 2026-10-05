@@ -8,6 +8,7 @@ import '../../core/widgets/placeholder_screen.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/books/presentation/create_book_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import 'routes.dart';
@@ -76,6 +77,12 @@ GoRouter buildAppRouter() => GoRouter(
             state,
             const PlaceholderScreen(title: 'Catalog', phase: 'Phase 1'),
           ),
+        ),
+        GoRoute(
+          path: Routes.newBook,
+          name: 'new-book',
+          pageBuilder: (context, state) =>
+              _booklyPage(context, state, const CreateBookScreen()),
         ),
         GoRoute(
           path: Routes.bookPath,
