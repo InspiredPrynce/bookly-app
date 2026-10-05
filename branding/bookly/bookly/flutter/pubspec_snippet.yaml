@@ -1,0 +1,36 @@
+# Merge into your pubspec.yaml
+
+dependencies:
+  flutter:
+    sdk: flutter
+  google_fonts: ^6.2.1
+  shared_preferences: ^2.3.2
+  # optional: render SVG logos instead of CustomPainter / PNG
+  # flutter_svg: ^2.0.10
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo/
+    - assets/logo/2.0x/
+    - assets/logo/3.0x/
+    # Offline Raleway (recommended for production, see README):
+    # - google_fonts/
+
+# App icon generation: flutter pub run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/bookly-app-icon-1024.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#7A1F2B"
+  adaptive_icon_foreground: "assets/icon/bookly-icon-foreground-1024.png"
+  adaptive_icon_monochrome: "assets/icon/bookly-icon-monochrome-1024.png"
+  web:
+    generate: true
+    image_path: "assets/icon/bookly-app-icon-1024.png"
+    background_color: "#F4EEE3"
+    theme_color: "#7A1F2B"
