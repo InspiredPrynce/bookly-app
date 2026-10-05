@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'bookly_colors.dart';
 import 'bookly_tokens.dart';
 import 'bookly_typography.dart';
+import 'reading_theme.dart';
 
 /// Reads Bookly's semantic tokens off the ambient theme.
 extension BooklyContext on BuildContext {
@@ -24,6 +25,33 @@ extension BooklyContext on BuildContext {
 abstract final class BooklyTheme {
   static ThemeData get light => _build(Brightness.light, BooklyColors.light);
   static ThemeData get dark => _build(Brightness.dark, BooklyColors.dark);
+
+  /// The reading surface's theme (PLAN.md §4.10).
+  ///
+  /// Resolves the reader's choice against the *system* brightness rather
+  /// than against the app's theme, because these are two settings that
+  /// are allowed to disagree: Light for the app by day, Night-paper for
+  /// the page at 11pm, is a coherent pair and not a contradiction. A
+  /// reading surface that consulted the ambient theme instead would
+  /// quietly collapse the two into one and take that choice away.
+  ///
+  /// Night-paper goes through [_build] rather than getting a theme of
+  /// its own, so it inherits the app's buttons, rules, input fields and
+  /// component styling wholesale and changes only the ink. A variant
+  /// built apart from the app is a variant that drifts apart from it —
+  /// and it is a reading surface, not a second design system.
+  static ThemeData reading({
+    required ReadingTheme choice,
+    required Brightness systemBrightness,
+  }) =>
+      switch (choice) {
+        ReadingTheme.nightPaper =>
+          _build(Brightness.dark, BooklyColors.nightPaper),
+        ReadingTheme.system =>
+          systemBrightness == Brightness.light ? light : dark,
+        ReadingTheme.light => light,
+        ReadingTheme.dark => dark,
+      };
 
   /// Card-catalog field: a single bottom rule, never a four-sided box, with
   /// the focus state elevating to Burnished Amber and no glowing halo.

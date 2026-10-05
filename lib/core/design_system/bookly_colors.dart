@@ -31,7 +31,8 @@ abstract final class BooklyBrand {
   static const oxbloodLight = Color(0xFFC66966);
 }
 
-/// Semantic color tokens. Light + dark. Read with `context.colors`.
+/// Semantic color tokens. Light + dark for the app, night-paper for the
+/// reading surface. Read with `context.colors`.
 @immutable
 class BooklyColors extends ThemeExtension<BooklyColors> {
   const BooklyColors({
@@ -162,6 +163,82 @@ class BooklyColors extends ThemeExtension<BooklyColors> {
       Color(0xFFA9C266), Color(0xFF8FA8E6), Color(0xFFE68A72),
     ],
     imageDim: 0.92,
+  );
+
+  /// Night-paper — the reading surface, PLAN.md §4.10.
+  ///
+  /// Not a third palette written from scratch: this is [dark], re-inked.
+  /// Eight values move and the other twenty-four are dark's own, because
+  /// a second full copy of the palette would be a second place for the
+  /// two to drift — and the day `dark` gains a token night-paper never
+  /// heard of, a page built from it renders a missing field instead of a
+  /// colour.
+  ///
+  /// What moves, and why:
+  ///
+  /// - **`bg` → `#0F0D0B`** and **`text` → `#D9CFBD`** — the only two
+  ///   values §4.10 actually names. Parchment rather than Soft Ivory is
+  ///   a full stop dimmer and a shade warmer: the difference between
+  ///   reading by lamplight and being read to by a screen. It measures
+  ///   **12.57:1** on the new canvas, so §4.10's ≥7:1 floor clears with
+  ///   room rather than by a hair.
+  /// - **The plate ladder** — `surface`, `surfaceRaised`,
+  ///   `surfaceSunken`, `aiSurface` — slides by exactly the canvas's own
+  ///   −3. Not cosmetic: `surfaceSunken` sits *below* `bg` by design,
+  ///   and leaving it at Deep Ink's value would put it **above** the new
+  ///   canvas, rendering every well as a bump.
+  /// - **`textOnAccent` → the page's own ink.** Cloth & Foil is `text`
+  ///   on `textOnAccent`, so the primary button becomes parchment with
+  ///   ink on it — the same cloth, lit from the same side as everything
+  ///   else on this surface.
+  /// - **`aiText` → parchment**, because Gemini's answers are read with
+  ///   `BooklyType.reading` like every other long-form text here. A
+  ///   plate in Soft Ivory would sit brighter than the chapter it is
+  ///   explaining.
+  ///
+  /// Everything else — the semantic statuses, the six member colours,
+  /// the rules, the gilt — stays where dark put it. Those were designed
+  /// for a near-black canvas, and `#0F0D0B` is one.
+  static final nightPaper = BooklyColors(
+    // §4.10 — the two values it names.
+    bg: const Color(0xFF0F0D0B),
+    text: const Color(0xFFD9CFBD),
+
+    // The plate ladder, moved with the canvas.
+    surface: const Color(0xFF15120F),
+    surfaceRaised: const Color(0xFF1C1814),
+    surfaceSunken: const Color(0xFF0A0806),
+    aiSurface: const Color(0xFF171310),
+
+    // The ink, everywhere it appears on this palette.
+    textOnAccent: const Color(0xFF0F0D0B),
+    aiText: const Color(0xFFD9CFBD),
+
+    // Dark's, unchanged.
+    scrim: dark.scrim,
+    textSecondary: dark.textSecondary,
+    textTertiary: dark.textTertiary,
+    textDisabled: dark.textDisabled,
+    textLink: dark.textLink,
+    border: dark.border,
+    borderStrong: dark.borderStrong,
+    focusRing: dark.focusRing,
+    accent: dark.accent,
+    accentHover: dark.accentHover,
+    accentPressed: dark.accentPressed,
+    accentSubtle: dark.accentSubtle,
+    accentSubtleText: dark.accentSubtleText,
+    success: dark.success,
+    successSubtle: dark.successSubtle,
+    warning: dark.warning,
+    warningSubtle: dark.warningSubtle,
+    danger: dark.danger,
+    dangerSubtle: dark.dangerSubtle,
+    info: dark.info,
+    infoSubtle: dark.infoSubtle,
+    aiBorder: dark.aiBorder,
+    members: dark.members,
+    imageDim: dark.imageDim,
   );
 
   @override

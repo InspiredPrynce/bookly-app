@@ -19,6 +19,8 @@ export 'bookly_theme.dart';
 export 'bookly_theme_mode.dart';
 export 'bookly_tokens.dart';
 export 'bookly_typography.dart';
+export 'reading_theme.dart';
+export 'reading_theme_mode.dart';
 
 // Components — split per PLAN.md §0.1 (one enum per file, no unrelated
 // classes sharing a file).
