@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/design_system/bookly_design_system.dart';
 import '../../core/snackbar/bookly_overlay.dart';
 import '../../core/widgets/placeholder_screen.dart';
+import '../../features/auth/presentation/forgot_password_screen.dart';
+import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/register_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import 'routes.dart';
 
@@ -47,29 +50,20 @@ GoRouter buildAppRouter() => GoRouter(
         GoRoute(
           path: Routes.login,
           name: 'login',
-          pageBuilder: (context, state) => _booklyPage(
-            context,
-            state,
-            const PlaceholderScreen(title: 'Sign in', phase: 'Phase 1'),
-          ),
+          pageBuilder: (context, state) =>
+              _booklyPage(context, state, const LoginScreen()),
         ),
         GoRoute(
           path: Routes.register,
           name: 'register',
-          pageBuilder: (context, state) => _booklyPage(
-            context,
-            state,
-            const PlaceholderScreen(title: 'Create account', phase: 'Phase 1'),
-          ),
+          pageBuilder: (context, state) =>
+              _booklyPage(context, state, const RegisterScreen()),
         ),
         GoRoute(
           path: Routes.forgotPassword,
           name: 'forgot-password',
-          pageBuilder: (context, state) => _booklyPage(
-            context,
-            state,
-            const PlaceholderScreen(title: 'Reset password', phase: 'Phase 1'),
-          ),
+          pageBuilder: (context, state) =>
+              _booklyPage(context, state, const ForgotPasswordScreen()),
         ),
 
         // ── Signed in ─────────────────────────────────────────────────────
