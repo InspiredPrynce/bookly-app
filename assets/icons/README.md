@@ -43,6 +43,17 @@ filename is what `BooklyIconKind` maps to. This set currently uses `info`
 (not `check-circle-2`). A 404 on download means the name moved — check
 https://lucide.dev/icons/ before assuming the network failed.
 
+**And Lucide deletes things too.** `youtube` and `podcast` were both in this
+directory once and are both 404 now: upstream removed every brand logo
+outright (`BRAND_LOGOS_STATEMENT.md`), and nothing replaced `podcast` either.
+Bookly's link rows therefore use `circle-play` and `mic-vocal`, which depict
+playing and recording rather than spelling a company. Upstream's own
+recommendation for logos is Simple Icons (https://simpleicons.org/) — pulling
+that in would break §4.3's single-library rule *and* its 1.75px stroke
+control, because Simple Icons are filled marks, not strokes. If a glyph ever
+needs to come back from a retired name, take it from an older npm release of
+`lucide-static`, and expect the re-vendor command above to keep 404ing for it.
+
 ## Registering a new icon
 
 1. Drop the `.svg` into `lucide/`.

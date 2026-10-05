@@ -9,9 +9,13 @@ import '../../../core/errors/failure_code.dart';
 import '../../../core/supabase/storage_uploader.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../domain/book.dart';
+import '../domain/book_detail.dart';
+import '../domain/book_link.dart';
 import '../domain/book_link_draft.dart';
 import '../domain/book_repository.dart';
+import '../domain/chapter.dart';
 import '../domain/chapter_draft.dart';
+import '../domain/link_kind.dart';
 
 final bookRepositoryProvider = Provider<BookRepository>(
   (ref) => BookRepositoryImpl(
@@ -154,7 +158,7 @@ class BookRepositoryImpl implements BookRepository {
         return _toBook(row);
       });
 
-  // ── Internals ───────────────────────────────────────────────────────────
+  // ── Reads ────────────────────────────────────────────────────────────────
 
   @override
   Future<List<Book>> all() => _guard(() async {
@@ -165,6 +169,67 @@ class BookRepositoryImpl implements BookRepository {
 
         return [for (final row in rows) _toBook(row)];
       });
+
+  @override
+  Future<BookDetail> detail(String bookId) => _guard(() async {
+        final row = await _client
+            .from('books')
+            .select(
+              '$_bookColumns, '
+              'chapters(id, position, title, content), '
+              'book_links(id, type, title, url, position, created_at)',
+            )
+            .eq('id', bookId)
+            .order('position', referencedTable: 'chapters')
+            .order('position', referencedTable: 'book_links')
+            .maybeSingle();
+
+        // One row by primary key, or none. `null` covers both "no such
+        // book" and "RLS will not show it", which are the same answer
+        // from out here (see the interface).
+        if (row == null) {
+          throw const Failure(
+            code: FailureCode.notFound,
+            message: 'That book could not be found.',
+          );
+        }
+
+        return BookDetail(
+          book: _toBook(row),
+          chapters: [
+            for (final c in row['chapters'] as List? ?? const [])
+              Chapter(
+                id: c['id'] as String,
+                bookId: bookId,
+                position: c['position'] as int,
+                title: c['title'] as String,
+                content: c['content'] as String?,
+              ),
+          ],
+          links: [
+            for (final l in row['book_links'] as List? ?? const [])
+              BookLink(
+                id: l['id'] as String,
+                bookId: bookId,
+                kind: LinkKind.fromDb(l['type'] as String),
+                title: l['title'] as String,
+                url: l['url'] as String,
+                position: l['position'] as int,
+                createdAt: _timestamp(l['created_at']),
+              ),
+          ],
+        );
+      });
+
+  @override
+  Future<String> uploadUrl(String uploadPath) => _guard(
+        () => _uploader.signedUrl(
+          bucket: StorageUploader.bookUploads,
+          path: uploadPath,
+        ),
+      );
+
+  // ── Internals ───────────────────────────────────────────────────────────
 
   static const _bookColumns = 'id, created_by, title, authors, about, '
       'cover_path, upload_path, created_at, updated_at';

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'book.dart';
+import 'book_detail.dart';
 import 'book_link_draft.dart';
 import 'chapter_draft.dart';
 
@@ -62,4 +63,40 @@ abstract interface class BookRepository {
   /// morning is the one they most want to find, and alphabetising puts
   /// it wherever the letter happens to land.
   Future<List<Book>> all();
+
+  /// One book with everything hanging off it, for the screen that shows
+  /// both of §5.7's branches at once.
+  ///
+  /// One request rather than three, because §5.7 describes *one*
+  /// surface. Three round trips would give it three moments of truth: a
+  /// cover could change under a chapter list that had not arrived, and
+  /// a failure on the third would leave a half-loaded book on screen
+  /// with no way to say which half. The database can join this; the
+  /// reader should not have to.
+  ///
+  /// Throws `notFound` — presentable copy, §3.2 — when no such book
+  /// exists or RLS declines to show it. Those two are indistinguishable
+  /// from outside the database, and deliberately so: telling a reader
+  /// "that book exists but you cannot have it" would confirm the
+  /// existence of something the policy is meant to keep quiet.
+  Future<BookDetail> detail(String bookId);
+
+  /// A short-lived URL that opens the book's own PDF/EPUB — §5.1's
+  /// optional upload, for a reader who wants the document rather than
+  /// the shelf entry.
+  ///
+  /// Reads the path rather than the id because that is what the column
+  /// holds (`books.upload_path`), and because the file is not part of
+  /// [detail]: it is a whole document the reader may never ask for, and
+  /// shipping it inside a join that every book screen performs would be
+  /// a network cost paid for a tap most readers will not make.
+  ///
+  /// Short-lived and signed, never a public URL — `book-uploads` is a
+  /// private bucket on purpose (migration 000008), and the signature is
+  /// minted here, once, for this handoff.
+  ///
+  /// Throws `unknown` with presentable copy (§3.2) when the file has
+  /// been removed or the policy declines — which are again the same
+  /// answer from outside.
+  Future<String> uploadUrl(String uploadPath);
 }

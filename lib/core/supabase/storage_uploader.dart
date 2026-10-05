@@ -92,6 +92,40 @@ class StorageUploader {
   String publicUrl({required String bucket, required String path}) =>
       _client.storage.from(bucket).getPublicUrl(path);
 
+  /// A short-lived URL for [path] in a bucket that is **not** public.
+  ///
+  /// This is the only way anything reaches `book-uploads`. The bucket is
+  /// `public: false` (migration 000008) precisely so that a link to a
+  /// reader's PDF cannot be pasted to a stranger, and reading it is open
+  /// to every signed-in account rather than to its owner — the book is in
+  /// the public catalog, and its copy is simply where the reader put it.
+  ///
+  /// So the signature is minted *per open*, not once and remembered: a
+  /// URL handed out and kept would quietly turn a private bucket into a
+  /// public one, only with an expiry nobody has to beat. [expiresIn] is
+  /// therefore short by design — long enough to hand off to whatever
+  /// opens the file, short enough that the handoff is not an address.
+  Future<String> signedUrl({
+    required String bucket,
+    required String path,
+    Duration expiresIn = const Duration(hours: 1),
+  }) async {
+    try {
+      return await _client.storage
+          .from(bucket)
+          .createSignedUrl(path, expiresIn.inSeconds);
+    } on StorageException catch (e) {
+      // A 403 here means the policy said no or the object has gone; the
+      // raw Supabase message is not copy a reader should see (§3.2), and
+      // every caller wants the same sentence anyway.
+      throw Failure(
+        code: FailureCode.unknown,
+        message: 'That file could not be opened. Please try again.',
+        cause: e,
+      );
+    }
+  }
+
   /// The extension implied by [bytes], for an image a decoder produced.
   ///
   /// Sniffed rather than told, because `XFile` extension and actual

@@ -31,7 +31,23 @@ enum BooklyIconKind {
   info('info'),
 
   /// Upstream `lightbulb` — a hint or a suggestion.
-  lightbulb('lightbulb');
+  lightbulb('lightbulb'),
+
+  /// Upstream `circle-play` — a thing ready to be played.
+  ///
+  /// This is the video marker §5.7's link rows call for, and it is not
+  /// the brand mark the spec named: Lucide deleted every logo upstream
+  /// (`BRAND_LOGOS_STATEMENT.md`), so `youtube` no longer exists. The
+  /// glyph therefore has to *depict* playing a video rather than spell
+  /// a company, which is also what keeps §4.3's single-library rule
+  /// and its 1.75px stroke control intact.
+  circlePlay('circle-play'),
+
+  /// Upstream `mic-vocal` — a thing recorded.
+  ///
+  /// The podcast marker, for the same reason as [circlePlay]: upstream's
+  /// `podcast` glyph is gone with the rest of them.
+  micVocal('mic-vocal');
 
   const BooklyIconKind(this.lucideName);
 
