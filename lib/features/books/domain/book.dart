@@ -21,6 +21,7 @@ class Book {
     this.about,
     this.coverPath,
     this.coverUrl,
+    this.uploadPath,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -45,6 +46,16 @@ class Book {
   /// Derived for display. Kept beside the path rather than computed by
   /// every widget that wants to draw a cover.
   final String? coverUrl;
+
+  /// Where the optional PDF/EPUB sits — a path into the **private**
+  /// `book-uploads` bucket, so unlike [coverUrl] it has no public
+  /// counterpart and reading it back costs a signed URL. That is
+  /// deliberate: the book is in the public catalog (§1.3 option C), but
+  /// its copy should not be fetchable by anyone who happens to have the
+  /// path and no session.
+  ///
+  /// Null for the ordinary book, which has no file attached.
+  final String? uploadPath;
 
   final DateTime createdAt;
   final DateTime updatedAt;

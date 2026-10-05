@@ -28,7 +28,10 @@ final bookRepositoryProvider = Provider<BookRepository>(
 ///    after it. Two books by the same author would otherwise share a
 ///    path, and `upsert: true` would have the second silently overwrite
 ///    the first's jacket.
-/// 2. **upload the cover**, then write `cover_path`.
+/// 2. **upload the cover**, then write `cover_path`; the optional
+///    PDF/EPUB follows the same two steps into `upload_path`, and its
+///    extension is sniffed from the bytes rather than trusted from the
+///    filename the picker returned.
 /// 3. **insert chapters**, then **links** — positions come from each
 ///    list's final order.
 ///
@@ -51,6 +54,7 @@ class BookRepositoryImpl implements BookRepository {
     required List<String> authors,
     String? about,
     Uint8List? coverBytes,
+    Uint8List? uploadBytes,
     required List<ChapterDraft> chapters,
     required List<BookLinkDraft> links,
   }) =>
@@ -75,6 +79,7 @@ class BookRepositoryImpl implements BookRepository {
 
         final bookId = row['id'] as String;
         String? coverPath;
+        String? uploadPath;
 
         try {
           if (coverBytes != null) {
@@ -90,6 +95,32 @@ class BookRepositoryImpl implements BookRepository {
             // So the returned [Book] carries what was just written rather
             // than the null the insert selected.
             row['cover_path'] = coverPath;
+          }
+
+          if (uploadBytes != null) {
+            final ext = StorageUploader.documentExtension(uploadBytes);
+            if (ext == null) {
+              // Refused rather than renamed. The picker has already
+              // narrowed this to `.pdf` and `.epub` by name, so a file
+              // whose bytes are neither has been mislabelled by whoever
+              // sent it — and uploading it under a matching name would
+              // produce a book whose file does not open, months later,
+              // with nothing to connect it back to this moment.
+              throw const Failure(
+                code: FailureCode.unknown,
+                message: 'That file is not a PDF or an EPUB.',
+              );
+            }
+            uploadPath = await _uploader.upload(
+              bucket: StorageUploader.bookUploads,
+              filename: '$bookId.$ext',
+              bytes: uploadBytes,
+            );
+            await _client
+                .from('books')
+                .update({'upload_path': uploadPath})
+                .eq('id', bookId);
+            row['upload_path'] = uploadPath;
           }
 
           if (chapters.isNotEmpty) {
@@ -116,7 +147,7 @@ class BookRepositoryImpl implements BookRepository {
             ]);
           }
         } catch (_) {
-          await _undo(bookId, coverPath);
+          await _undo(bookId, coverPath: coverPath, uploadPath: uploadPath);
           rethrow;
         }
 
@@ -125,8 +156,8 @@ class BookRepositoryImpl implements BookRepository {
 
   // ── Internals ───────────────────────────────────────────────────────────
 
-  static const _bookColumns =
-      'id, created_by, title, authors, about, cover_path, created_at, updated_at';
+  static const _bookColumns = 'id, created_by, title, authors, about, '
+      'cover_path, upload_path, created_at, updated_at';
 
   String get _userId {
     final id = _client.auth.currentUser?.id;
@@ -145,10 +176,15 @@ class BookRepositoryImpl implements BookRepository {
   /// Removes a half-created book. Best effort, and deliberately silent.
   ///
   /// The row goes first because that is the defect the reader would
-  /// actually see; the object goes second because an orphaned jacket
-  /// costs a few bytes and is invisible to them. `chapters` and
-  /// `book_links` need no separate cleanup — both cascade from `books`.
-  Future<void> _undo(String bookId, String? coverPath) async {
+  /// actually see; the objects go second because an orphaned jacket or
+  /// a stray PDF costs a few bytes and is invisible to them. `chapters`
+  /// and `book_links` need no separate cleanup — both cascade from
+  /// `books`.
+  Future<void> _undo(
+    String bookId, {
+    String? coverPath,
+    String? uploadPath,
+  }) async {
     try {
       await _client.from('books').delete().eq('id', bookId);
     } catch (_) {
@@ -156,13 +192,21 @@ class BookRepositoryImpl implements BookRepository {
       // message about bookkeeping the reader never asked about.
     }
 
-    if (coverPath == null) return;
+    await _remove(StorageUploader.bookCovers, coverPath);
+    await _remove(StorageUploader.bookUploads, uploadPath);
+  }
+
+  /// Deletes [path] from [bucket] when there is one to delete.
+  ///
+  /// Swallowed on failure for the same reason everything in [_undo] is:
+  /// this is cleanup, not the operation, and the object is invisible to
+  /// the reader either way.
+  Future<void> _remove(String bucket, String? path) async {
+    if (path == null) return;
     try {
-      await _client.storage.from(StorageUploader.bookCovers).remove([
-        coverPath,
-      ]);
+      await _client.storage.from(bucket).remove([path]);
     } catch (_) {
-      // Same reasoning — this is cleanup, not the operation.
+      // See above.
     }
   }
 
@@ -181,6 +225,7 @@ class BookRepositoryImpl implements BookRepository {
               bucket: StorageUploader.bookCovers,
               path: path,
             ),
+      uploadPath: row['upload_path'] as String?,
       createdAt: _timestamp(row['created_at']),
       updatedAt: _timestamp(row['updated_at']),
     );

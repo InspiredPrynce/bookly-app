@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -82,6 +85,67 @@ class _CreateBookScreenState extends ConsumerState<CreateBookScreen> {
 
   void _clearCover() => setState(() => _controller.setCover(null));
 
+  /// Picker → size check → read → hand it to the provider.
+  ///
+  /// Cancelled is silent, exactly as it is for the cover: declining to
+  /// attach a file is not a mistake the reader made.
+  ///
+  /// The size is asked *before* the bytes. Refusing a 300 MB file
+  /// without ever holding it costs a sentence; reading it first costs a
+  /// second of the reader's time and a chunk of their device's memory to
+  /// prove the same thing.
+  Future<void> _pickBookFile() async {
+    // v13: static, and *empty* on cancel rather than null — so an empty
+    // list is the decline, handled here exactly as a null picker is.
+    final files = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['pdf', 'epub'],
+    );
+    if (files.isEmpty || !mounted) return;
+
+    final file = files.single;
+    final size = await file.length();
+    if (!mounted) return;
+
+    if (size == null) {
+      // Distinct from a genuinely empty file (0), which is refused
+      // below as "not a PDF or an EPUB" — this one could not even be
+      // measured, so the picker or the sandbox gave up, not the reader.
+      BooklyToast.error('That file could not be read.');
+      return;
+    }
+    if (size > CreateBookController.maxUploadBytes) {
+      BooklyToast.error('That file is over 50 MB.');
+      return;
+    }
+
+    Uint8List bytes;
+    try {
+      bytes = await file.readAsBytes();
+    } catch (_) {
+      // A file that vanished between picking and reading, or one the
+      // sandbox will not release. Either way it is not the reader's
+      // input that is wrong.
+      if (mounted) BooklyToast.error('That file could not be read.');
+      return;
+    }
+    if (!mounted) return;
+
+    setState(() => _controller.setUpload(bytes, file.name));
+  }
+
+  void _clearBookFile() => setState(() => _controller.clearUpload());
+
+  /// "1.2 MB". Which file this *is* is the name's job; this answers the
+  /// other question — whether it is worth the upload at all.
+  static String _formatBytes(int bytes) {
+    if (bytes >= 1048576) {
+      return '${(bytes / 1048576).toStringAsFixed(1)} MB';
+    }
+    if (bytes >= 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '$bytes B';
+  }
+
   /// Rows the reader added and never typed into are not rows.
   ///
   /// Pruned *before* validating so an abandoned "+ Add chapter" is not
@@ -145,6 +209,8 @@ class _CreateBookScreenState extends ConsumerState<CreateBookScreen> {
     });
 
     final cover = _controller.coverBytes;
+    final uploadName = _controller.uploadName;
+    final uploadBytes = _controller.uploadBytes;
     final publishable = BookPublishRule.isPublishable(
       chapterCount: _chapters.length,
       linkCount: _links.length,
@@ -256,6 +322,46 @@ class _CreateBookScreenState extends ConsumerState<CreateBookScreen> {
                                       child: const Text('Remove'),
                                     ),
                                   ],
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: BooklySpace.xl),
+
+                  // ── Book file ──────────────────────────────────────────
+                  _Section(
+                    title: 'Book file',
+                    subtitle: 'A PDF or EPUB, if you have one to share.',
+                    child: Center(
+                      child: uploadName == null
+                          ? TextButton(
+                              onPressed: _pickBookFile,
+                              child: const Text('+ Add PDF or EPUB'),
+                            )
+                          : Column(
+                              children: [
+                                Text(
+                                  uploadName,
+                                  textAlign: TextAlign.center,
+                                  style: BooklyType.bodySm.copyWith(
+                                    color: colors.text,
+                                  ),
+                                ),
+                                const SizedBox(height: BooklySpace.xs),
+                                Text(
+                                  _formatBytes(uploadBytes!.length),
+                                  style: BooklyType.bodySm.copyWith(
+                                    color: colors.textTertiary,
+                                  ),
+                                ),
+                                const SizedBox(height: BooklySpace.sm),
+                                TextButton(
+                                  onPressed: _clearBookFile,
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: colors.danger,
+                                  ),
+                                  child: const Text('Remove'),
                                 ),
                               ],
                             ),

@@ -125,4 +125,36 @@ class StorageUploader {
     // so a mislabelled image degrades to something still renderable.
     return 'png';
   }
+
+  /// The extension implied by [bytes] for a document (§5.1), or null
+  /// when Bookly cannot say what it is.
+  ///
+  /// Sniffed for the same reason [imageExtension] is: the name the
+  /// picker hands back is the name the *file's sender* used, while
+  /// `allowed_mime_types` on `book-uploads` admits only
+  /// `application/pdf` and `application/epub+zip`. A file whose bytes
+  /// are neither is one Bookly should not label, so this returns nothing
+  /// and lets the caller decide — guessing `pdf` would upload a file the
+  /// bucket may accept under a name that is wrong.
+  ///
+  /// EPUB is a ZIP container, which is what the `PK` signature says. A
+  /// bare ZIP would also pass, but the picker has already narrowed the
+  /// choice to these two extensions before anything reaches here.
+  static String? documentExtension(Uint8List bytes) {
+    // '%PDF-' is the only magic number a PDF has.
+    if (bytes.length > 4 &&
+        bytes[0] == 0x25 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x44 &&
+        bytes[3] == 0x46 &&
+        bytes[4] == 0x2D) {
+      return 'pdf';
+    }
+
+    if (bytes.length > 1 && bytes[0] == 0x50 && bytes[1] == 0x4B) {
+      return 'epub';
+    }
+
+    return null;
+  }
 }

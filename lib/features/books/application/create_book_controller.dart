@@ -17,18 +17,44 @@ final createBookControllerProvider =
 
 /// Owns the create-book attempt (PLAN.md §5.1).
 ///
-/// [coverBytes] is held here for the same reason `RegisterController`
-/// holds the avatar: it is the one input on this form the reader cannot
-/// re-enter cheaply, so a failed submit that made them dismiss the
-/// picker would lose the jacket they chose. Everything else — title,
-/// authors, about, every chapter and every link — is text they can
-/// retype, and it stays in the screen's controllers where a failed
-/// attempt does not disturb it at all.
+/// [coverBytes] and [uploadBytes] are held here for the same reason
+/// `RegisterController` holds the avatar: they are the only inputs on
+/// this form the reader cannot re-enter cheaply, so a failed submit that
+/// made them dismiss a picker would lose a file they had already
+/// chosen. Everything else — title, authors, about, every chapter and
+/// every link — is text they can retype, and it stays in the screen's
+/// controllers where a failed attempt does not disturb it at all.
 class CreateBookController extends Notifier<CreateBookState> {
   @override
   CreateBookState build() => CreateBookState.initial;
 
   Uint8List? coverBytes;
+
+  /// The optional PDF/EPUB, held here for the same reason [coverBytes]
+  /// is: a reader who picked a 40 MB file should not have to go and find
+  /// it again because a submit failed.
+  ///
+  /// [uploadName] is display-only. The repository never sees it — the
+  /// extension it writes with is sniffed from the bytes, not trusted
+  /// from the filename the picker handed back.
+  Uint8List? uploadBytes;
+  String? uploadName;
+
+  /// Mirrors `file_size_limit` on the `book-uploads` bucket
+  /// (migration 20261005000008): 50 MB. Checked before the bytes leave
+  /// the device, so a file that cannot land is refused in a sentence
+  /// rather than after several minutes of upload and a Storage error.
+  static const maxUploadBytes = 52428800;
+
+  void setUpload(Uint8List bytes, String name) {
+    uploadBytes = bytes;
+    uploadName = name;
+  }
+
+  void clearUpload() {
+    uploadBytes = null;
+    uploadName = null;
+  }
 
   /// Returns the new book's id, or null when the attempt failed — in
   /// which case the failure is in [CreateBookState.failure] and the
@@ -51,6 +77,7 @@ class CreateBookController extends Notifier<CreateBookState> {
             authors: _splitAuthors(authorsRaw),
             about: about,
             coverBytes: coverBytes,
+            uploadBytes: uploadBytes,
             chapters: chapters,
             links: links,
           );
@@ -58,9 +85,10 @@ class CreateBookController extends Notifier<CreateBookState> {
       state = CreateBookState(createdBookId: book.id);
       return book.id;
     } on Failure catch (f) {
-      // `coverBytes` survives deliberately. The form is still showing the
-      // jacket it uploaded or failed to upload, and making the reader
-      // pick it again to retry would punish them for the network.
+      // `coverBytes` and `uploadBytes` survive deliberately. The form is
+      // still showing the file it uploaded or failed to upload, and
+      // making the reader pick it again to retry would punish them for
+      // the network.
       state = CreateBookState(failure: f);
       return null;
     } catch (_) {
@@ -87,6 +115,7 @@ class CreateBookController extends Notifier<CreateBookState> {
   /// still be holding.
   void reset() {
     coverBytes = null;
+    clearUpload();
     state = CreateBookState.initial;
   }
 

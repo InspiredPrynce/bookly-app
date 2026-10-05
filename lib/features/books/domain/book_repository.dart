@@ -20,10 +20,13 @@ import 'chapter_draft.dart';
 /// its compensation onto every caller, and the second caller would get
 /// it slightly different.
 ///
-/// The cover upload therefore lives *inside* [create] for the same
-/// reason the avatar upload lives inside `ProfileRepository.update`: a
-/// screen that uploads and then forgets to write the row leaves an
-/// orphaned object that nothing in the database points at.
+/// The cover and the optional PDF/EPUB therefore both live *inside*
+/// [create] for the same reason the avatar upload lives inside
+/// `ProfileRepository.update`: a screen that uploads and then forgets
+/// to write the row leaves an orphaned object that nothing in the
+/// database points at. For `book-uploads` that was not hypothetical —
+/// migration 20261005000012 added `books.upload_path` because the
+/// bucket had existed since Phase 0 with nowhere to record its hold.
 abstract interface class BookRepository {
   /// Persists the book and everything attached to it.
   ///
@@ -43,6 +46,7 @@ abstract interface class BookRepository {
     required List<String> authors,
     String? about,
     Uint8List? coverBytes,
+    Uint8List? uploadBytes,
     required List<ChapterDraft> chapters,
     required List<BookLinkDraft> links,
   });
