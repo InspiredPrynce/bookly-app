@@ -8,6 +8,7 @@ import '../../core/widgets/placeholder_screen.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import 'routes.dart';
 
@@ -172,11 +173,8 @@ GoRouter buildAppRouter() => GoRouter(
         GoRoute(
           path: Routes.settingsProfile,
           name: 'settings-profile',
-          pageBuilder: (context, state) => _booklyPage(
-            context,
-            state,
-            const PlaceholderScreen(title: 'Profile', phase: 'Phase 3'),
-          ),
+          pageBuilder: (context, state) =>
+              _booklyPage(context, state, const EditProfileScreen()),
         ),
       ],
     );

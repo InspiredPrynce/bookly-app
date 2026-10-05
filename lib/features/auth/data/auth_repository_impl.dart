@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/failure.dart';
 import '../../../core/errors/failure_code.dart';
+import '../../../core/supabase/storage_uploader.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../domain/auth_repository.dart';
 
@@ -23,9 +24,15 @@ final authRepositoryProvider = Provider<AuthRepository>(
 /// credentials" becomes `invalidCredentials` with Bookly's wording, and
 /// anything unrecognised becomes a deliberately vague `unknown`.
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl(this._client);
+  AuthRepositoryImpl(this._client) : _uploader = StorageUploader(_client);
 
   final SupabaseClient _client;
+
+  /// Writes portraits to the `avatars` bucket through the same helper the
+  /// profile repository uses, so registration and `EditProfileScreen`
+  /// cannot disagree about where an avatar lives or how its extension is
+  /// decided.
+  final StorageUploader _uploader;
 
   @override
   Stream<bool> watchSignedIn() =>
@@ -85,7 +92,12 @@ class AuthRepositoryImpl implements AuthRepository {
         // Storage will accept an avatar upload.
         final avatarPath = avatarBytes == null
             ? null
-            : await _uploadAvatar(user.id, avatarBytes);
+            : await _uploader.upload(
+                bucket: StorageUploader.avatars,
+                filename:
+                    'avatar.${StorageUploader.imageExtension(avatarBytes)}',
+                bytes: avatarBytes,
+              );
 
         if ((bio?.trim().isNotEmpty ?? false) || avatarPath != null) {
           await _updateProfile(user.id, bio: bio, avatarPath: avatarPath);
@@ -100,22 +112,6 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> signOut() => _guard(() => _client.auth.signOut());
 
   // ── Profile completion ────────────────────────────────────────────────
-
-  /// Returns the path *within* the avatars bucket, which is what
-  /// `profiles.avatar_path` stores — a storage policy authorises a path,
-  /// while a URL would embed the project ref instead.
-  Future<String> _uploadAvatar(String userId, Uint8List bytes) async {
-    final ext = _sniffExtension(bytes);
-    final path = '$userId/avatar.$ext';
-
-    await _client.storage.from('avatars').uploadBinary(
-          path,
-          bytes,
-          fileOptions: const FileOptions(upsert: true),
-        );
-
-    return path;
-  }
 
   Future<void> _updateProfile(
     String userId, {
@@ -139,22 +135,6 @@ class AuthRepositoryImpl implements AuthRepository {
             .eq('id', userId)
             .single();
       });
-
-  /// The upload is already authenticated by this point, so the only real
-  /// failure here is the reader's image being neither JPEG nor PNG —
-  /// rather than a sniffer that guesses from magic bytes, take the type
-  /// the decoder is most likely to have produced and fall back to PNG.
-  static String _sniffExtension(Uint8List bytes) {
-    if (bytes.length > 3 && bytes[0] == 0xFF && bytes[1] == 0xD8) return 'jpg';
-    if (bytes.length > 3 &&
-        bytes[0] == 0x89 &&
-        bytes[1] == 0x50 &&
-        bytes[2] == 0x4E &&
-        bytes[3] == 0x47) {
-      return 'png';
-    }
-    return 'png';
-  }
 
   // ── Error translation ─────────────────────────────────────────────────
 

@@ -12,6 +12,7 @@ import '../../../core/errors/failure_surface.dart';
 import '../../../core/snackbar/present_failure.dart';
 import '../../../core/utils/avatar_image.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/widgets/avatar_field.dart';
 import '../../../core/widgets/bookly_text_field.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../application/auth_submit_state.dart';
@@ -134,7 +135,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ],
       ),
       children: [
-        _AvatarField(
+        AvatarField(
           bytes: _avatar,
           onPick: _pickAvatar,
           onClear: _clearAvatar,
@@ -151,10 +152,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.name],
                 textCapitalization: TextCapitalization.words,
-                validator: (v) => Validators.notEmpty(
-                  v,
-                  message: 'Enter the name your circle will see.',
-                ),
+                validator: (v) {
+                  final empty = Validators.notEmpty(
+                    v,
+                    message: 'Enter the name your circle will see.',
+                  );
+                  if (empty != null) return empty;
+                  if ((v ?? '').trim().length > Validators.nameMaxLength) {
+                    return 'Keep it to ${Validators.nameMaxLength} '
+                        'characters or fewer.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: BooklySpace.lg),
               BooklyTextField(
@@ -184,9 +193,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 controller: _bio,
                 hint: 'What do you like to read?',
                 maxLines: 3,
-                validator: (v) => (v != null && v.length > 160)
-                    ? 'Keep it to 160 characters.'
-                    : null,
+                validator: (v) =>
+                    (v ?? '').trim().length > Validators.bioMaxLength
+                        ? 'Keep it to ${Validators.bioMaxLength} characters.'
+                        : null,
               ),
             ],
           ),
@@ -202,71 +212,3 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 }
 
-/// Optional photo: a 96pt circle that reads as a portrait slot, plus the
-/// words that say what tapping it does.
-///
-/// No camera glyph — Bookly vendors six Lucide icons (§4.3) and a camera
-/// is not among them, and a word is clearer than a glyph here anyway.
-/// The `+` in an empty circle is the printed convention for "affix
-/// portrait", not an icon.
-class _AvatarField extends StatelessWidget {
-  const _AvatarField({
-    required this.bytes,
-    required this.onPick,
-    required this.onClear,
-  });
-
-  final Uint8List? bytes;
-  final VoidCallback onPick;
-  final VoidCallback onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Column(
-      children: [
-        InkWell(
-          onTap: onPick,
-          customBorder: const CircleBorder(),
-          child: Container(
-            width: 96,
-            height: 96,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colors.surfaceSunken,
-              border: Border.all(color: colors.borderStrong),
-            ),
-            child: bytes != null
-                ? Image.memory(bytes!, fit: BoxFit.cover)
-                : Center(
-                    child: Text(
-                      '+',
-                      style: BooklyType.headlineLg.copyWith(
-                        color: colors.textTertiary,
-                      ),
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(height: BooklySpace.xs),
-        Wrap(
-          alignment: WrapAlignment.center,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            TextButton(
-              onPressed: onPick,
-              child: Text(bytes == null ? 'Add a photo' : 'Change photo'),
-            ),
-            if (bytes != null)
-              TextButton(
-                onPressed: onClear,
-                child: const Text('Remove'),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
