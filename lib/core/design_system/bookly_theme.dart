@@ -1,267 +1,257 @@
 import 'package:flutter/material.dart';
+
 import 'bookly_colors.dart';
 import 'bookly_tokens.dart';
 import 'bookly_typography.dart';
 
+/// Reads Bookly's semantic tokens off the ambient theme.
 extension BooklyContext on BuildContext {
-  /// Semantic colors for the active theme.
   BooklyColors get colors => Theme.of(this).extension<BooklyColors>()!;
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
 }
 
+/// Literary Clothbound [ThemeData], light ("The Reading Desk") and dark
+/// ("The Night Salon").
+///
+/// Three named button treatments carry the whole interaction language:
+///
+/// - **Cloth & Foil** ([_filled]) — the primary action. High-contrast warm
+///   ground, ivory type, a hairline gilt border.
+/// - **Paper & Rule** ([_outlined]) — the secondary action. Paper ground,
+///   hairline rule, charcoal type; presses toward a tone-down of the paper.
+/// - **Gilt Gold** ([_accent]) — burnished amber, reserved for primary
+///   conversion events.
 abstract final class BooklyTheme {
   static ThemeData get light => _build(Brightness.light, BooklyColors.light);
   static ThemeData get dark => _build(Brightness.dark, BooklyColors.dark);
 
-  static ThemeData _build(Brightness b, BooklyColors c) {
-    final scheme = ColorScheme(
-      brightness: b,
-      primary: c.accent,
-      onPrimary: c.textOnAccent,
-      primaryContainer: c.accentSubtle,
-      onPrimaryContainer: c.accentSubtleText,
-      secondary: c.textLink,
-      onSecondary: c.bg,
-      error: c.danger,
-      onError: b == Brightness.dark ? c.bg : Colors.white,
-      errorContainer: c.dangerSubtle,
-      onErrorContainer: c.danger,
-      surface: c.surface,
-      onSurface: c.text,
-      onSurfaceVariant: c.textSecondary,
-      surfaceContainerLowest: c.surfaceSunken,
-      surfaceContainerLow: c.surface,
-      surfaceContainer: c.surface,
-      surfaceContainerHigh: c.surfaceRaised,
-      surfaceContainerHighest: c.surfaceRaised,
-      outline: c.borderStrong,
-      outlineVariant: c.border,
-      scrim: c.scrim,
-      shadow: Colors.black,
+  /// Card-catalog field: a single bottom rule, never a four-sided box, with
+  /// the focus state elevating to Burnished Amber and no glowing halo.
+  static InputDecorationTheme _input(BooklyColors c) {
+    BorderSide rule(Color color) =>
+        BorderSide(color: color, width: BooklyBorder.inputBottom);
+    return InputDecorationTheme(
+      isDense: true,
+      filled: false,
+      floatingLabelBehavior: FloatingLabelBehavior.never,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 0,
+        vertical: BooklySpace.md,
+      ),
+      border: UnderlineInputBorder(borderSide: rule(c.border)),
+      enabledBorder: UnderlineInputBorder(borderSide: rule(c.border)),
+      focusedBorder: UnderlineInputBorder(borderSide: rule(c.focusRing)),
+      errorBorder: UnderlineInputBorder(borderSide: rule(c.danger)),
+      focusedErrorBorder: UnderlineInputBorder(borderSide: rule(c.danger)),
+      hintStyle: BooklyType.bodyMd.copyWith(color: c.textTertiary),
+      labelStyle: BooklyType.bodyMd.copyWith(color: c.textSecondary),
+      errorStyle: BooklyType.labelMd.copyWith(color: c.danger),
     );
+  }
 
-    final text = BooklyType.textTheme().apply(
-      bodyColor: c.text,
-      displayColor: c.text,
-    );
+  /// Cloth & Foil. Ground = `text`, type = `textOnAccent`, which resolves to
+  /// Warm Charcoal + Soft Ivory in light and the exact inverse in dark — the
+  /// same cloth, lit from the other side.
+  static ButtonStyle _filled(BooklyColors c) => FilledButton.styleFrom(
+        backgroundColor: c.text,
+        foregroundColor: c.textOnAccent,
+        disabledBackgroundColor: c.textDisabled,
+        disabledForegroundColor: c.bg,
+        side: BorderSide(color: c.accent, width: BooklyBorder.thin),
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(
+          horizontal: BooklySpace.lg,
+          vertical: BooklySpace.sm,
+        ),
+        minimumSize: const Size(0, BooklySpace.tapMin),
+        textStyle: BooklyType.button,
+        shape: const RoundedRectangleBorder(borderRadius: BooklyRadius.rSm),
+      );
 
-    OutlineInputBorder inputBorder(Color color, [double w = BooklyBorder.thin]) =>
-        OutlineInputBorder(
-          borderRadius: BooklyRadius.rSm,
-          borderSide: BorderSide(color: color, width: w),
-        );
-
-    final buttonShape =
-        RoundedRectangleBorder(borderRadius: BooklyRadius.rMd);
-    const buttonPad = EdgeInsets.symmetric(horizontal: BooklySpace.s5);
-
-    WidgetStateProperty<Color?> fill(Color base, Color hover, Color pressed) =>
-        WidgetStateProperty.resolveWith((s) {
-          if (s.contains(WidgetState.disabled)) return c.surfaceSunken;
-          if (s.contains(WidgetState.pressed)) return pressed;
-          if (s.contains(WidgetState.hovered)) return hover;
-          return base;
-        });
-
-    return ThemeData(
-      useMaterial3: true,
-      brightness: b,
-      colorScheme: scheme,
-      scaffoldBackgroundColor: c.bg,
-      canvasColor: c.bg,
-      textTheme: text,
-      primaryTextTheme: text,
-      extensions: [c],
-      dividerTheme: DividerThemeData(color: c.border, thickness: BooklyBorder.thin, space: 1),
-      iconTheme: IconThemeData(color: c.text, size: 24),
-      focusColor: c.focusRing.withValues(alpha: 0.2),
-      hoverColor: c.accentSubtle.withValues(alpha: 0.5),
-      splashFactory: InkRipple.splashFactory,
-      visualDensity: VisualDensity.standard,
-      materialTapTargetSize: MaterialTapTargetSize.padded,
-
-      appBarTheme: AppBarTheme(
+  /// Paper & Rule.
+  static ButtonStyle _outlined(BooklyColors c) => OutlinedButton.styleFrom(
         backgroundColor: c.surface,
         foregroundColor: c.text,
+        side: BorderSide(color: c.border, width: BooklyBorder.thin),
+        padding: const EdgeInsets.symmetric(
+          horizontal: BooklySpace.lg,
+          vertical: BooklySpace.sm,
+        ),
+        minimumSize: const Size(0, BooklySpace.tapMin),
+        textStyle: BooklyType.button,
+        shape: const RoundedRectangleBorder(borderRadius: BooklyRadius.rSm),
+      );
+
+  /// Gilt Gold — reserved for primary conversion events ("Add to Library",
+  /// "Join Circle"). Not wired as a theme default, because Material picks
+  /// button hierarchy for us; ask for it explicitly:
+  ///
+  /// ```dart
+  /// FilledButton(style: BooklyTheme.accent(context), onPressed: ..., child: ...);
+  /// ```
+  static ButtonStyle accent(BuildContext context) => _accent(context.colors);
+
+  static ButtonStyle _accent(BooklyColors c) => FilledButton.styleFrom(
+        backgroundColor: c.accent,
+        foregroundColor: BooklyBrand.ink,
+        disabledBackgroundColor: c.surfaceSunken,
+        disabledForegroundColor: c.textDisabled,
+        side: BorderSide(color: c.accentHover, width: BooklyBorder.thin),
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(
+          horizontal: BooklySpace.lg,
+          vertical: BooklySpace.sm,
+        ),
+        minimumSize: const Size(0, BooklySpace.tapMin),
+        textStyle: BooklyType.button,
+        shape: const RoundedRectangleBorder(borderRadius: BooklyRadius.rSm),
+      );
+
+  static ThemeData _build(Brightness b, BooklyColors c) {
+    final onSurface = b == Brightness.light ? BooklyBrand.ink : BooklyBrand.ivory;
+
+    final base = ThemeData(
+      useMaterial3: true,
+      brightness: b,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: c.accent,
+        brightness: b,
+        primary: c.accent,
+        onPrimary: BooklyBrand.ink,
+        secondary: c.accent,
+        surface: c.surface,
+        onSurface: onSurface,
+        error: c.danger,
+        outline: c.border,
+        outlineVariant: c.borderStrong,
+      ),
+      scaffoldBackgroundColor: c.bg,
+      canvasColor: c.bg,
+      extensions: [c],
+      textTheme: BooklyType.textTheme().apply(
+        bodyColor: c.text,
+        displayColor: c.text,
+      ),
+      splashFactory: InkRipple.splashFactory,
+      splashColor: c.accent.withValues(alpha: 0.08),
+      hoverColor: c.accent.withValues(alpha: 0.05),
+      focusColor: c.accent.withValues(alpha: 0.10),
+      dividerColor: c.border,
+      dividerTheme: DividerThemeData(
+        color: c.border,
+        thickness: BooklyBorder.thin,
+        space: BooklyBorder.thin,
+      ),
+      iconTheme: IconThemeData(color: c.text, size: 24),
+      primaryIconTheme: IconThemeData(color: c.accent, size: 24),
+
+      appBarTheme: AppBarTheme(
+        backgroundColor: c.bg,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        centerTitle: false,
-        titleTextStyle: BooklyType.h4.copyWith(color: c.text),
-        shape: Border(bottom: BorderSide(color: c.border)),
+        foregroundColor: c.text,
+        titleTextStyle: BooklyType.headlineSm.copyWith(color: c.text),
+        iconTheme: IconThemeData(color: c.text, size: 24),
       ),
 
-      // Primary button
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ButtonStyle(
-          minimumSize: const WidgetStatePropertyAll(Size(64, 48)),
-          padding: const WidgetStatePropertyAll(buttonPad),
-          shape: WidgetStatePropertyAll(buttonShape),
-          elevation: const WidgetStatePropertyAll(0),
-          textStyle: WidgetStatePropertyAll(BooklyType.button),
-          backgroundColor: fill(c.accent, c.accentHover, c.accentPressed),
-          foregroundColor: WidgetStateProperty.resolveWith((s) =>
-              s.contains(WidgetState.disabled) ? c.textDisabled : c.textOnAccent),
-        ),
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: ButtonStyle(
-          minimumSize: const WidgetStatePropertyAll(Size(64, 48)),
-          padding: const WidgetStatePropertyAll(buttonPad),
-          shape: WidgetStatePropertyAll(buttonShape),
-          textStyle: WidgetStatePropertyAll(BooklyType.button),
-          backgroundColor: fill(c.accent, c.accentHover, c.accentPressed),
-          foregroundColor: WidgetStateProperty.resolveWith((s) =>
-              s.contains(WidgetState.disabled) ? c.textDisabled : c.textOnAccent),
-        ),
-      ),
-      // Secondary
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: ButtonStyle(
-          minimumSize: const WidgetStatePropertyAll(Size(64, 48)),
-          padding: const WidgetStatePropertyAll(buttonPad),
-          shape: WidgetStatePropertyAll(buttonShape),
-          textStyle: WidgetStatePropertyAll(BooklyType.button),
-          foregroundColor: WidgetStateProperty.resolveWith((s) =>
-              s.contains(WidgetState.disabled) ? c.textDisabled : c.text),
-          side: WidgetStateProperty.resolveWith((s) => BorderSide(
-              color: s.contains(WidgetState.disabled) ? c.border : c.borderStrong)),
-          backgroundColor: WidgetStateProperty.resolveWith((s) =>
-              s.contains(WidgetState.pressed) ? c.surfaceSunken : Colors.transparent),
-        ),
-      ),
-      // Tertiary
-      textButtonTheme: TextButtonThemeData(
-        style: ButtonStyle(
-          minimumSize: const WidgetStatePropertyAll(Size(64, 44)),
-          shape: WidgetStatePropertyAll(buttonShape),
-          textStyle: WidgetStatePropertyAll(BooklyType.button),
-          foregroundColor: WidgetStateProperty.resolveWith((s) =>
-              s.contains(WidgetState.disabled) ? c.textDisabled : c.textLink),
-        ),
-      ),
-
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: c.surfaceRaised,
-        contentPadding: const EdgeInsets.symmetric(
-            horizontal: BooklySpace.s4, vertical: BooklySpace.s3 + 2),
-        hintStyle: BooklyType.body.copyWith(color: c.textTertiary),
-        labelStyle: BooklyType.bodySm.copyWith(
-            color: c.textSecondary, fontWeight: FontWeight.w600),
-        helperStyle: BooklyType.caption.copyWith(color: c.textTertiary),
-        errorStyle: BooklyType.caption.copyWith(color: c.danger),
-        border: inputBorder(c.borderStrong),
-        enabledBorder: inputBorder(c.borderStrong),
-        focusedBorder: inputBorder(c.focusRing, BooklyBorder.strong),
-        errorBorder: inputBorder(c.danger),
-        focusedErrorBorder: inputBorder(c.danger, BooklyBorder.strong),
-        disabledBorder: inputBorder(c.border),
-      ),
-
+      // Book jacket cards: flat, hairline-bound, sharp corners.
       cardTheme: CardThemeData(
         color: c.surface,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BooklyRadius.rMd,
-          side: BorderSide(color: c.border),
+          side: BorderSide(color: c.border, width: BooklyBorder.thin),
+          borderRadius: BooklyRadius.rSm,
         ),
       ),
 
-      chipTheme: ChipThemeData(
-        backgroundColor: Colors.transparent,
-        selectedColor: c.accentSubtle,
-        disabledColor: c.surfaceSunken,
-        side: BorderSide(color: c.border),
-        shape: const StadiumBorder(),
-        labelStyle: BooklyType.bodySm.copyWith(color: c.text),
-        secondaryLabelStyle: BooklyType.bodySm.copyWith(color: c.accentSubtleText),
-        padding: const EdgeInsets.symmetric(horizontal: BooklySpace.s2),
-        checkmarkColor: c.accentSubtleText,
+      inputDecorationTheme: _input(c),
+
+      filledButtonTheme: FilledButtonThemeData(style: _filled(c)),
+      elevatedButtonTheme: ElevatedButtonThemeData(style: _filled(c)),
+      outlinedButtonTheme: OutlinedButtonThemeData(style: _outlined(c)),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: c.text,
+          textStyle: BooklyType.button,
+          minimumSize: const Size(0, BooklySpace.tapMin),
+          padding: const EdgeInsets.symmetric(horizontal: BooklySpace.md),
+          shape: const RoundedRectangleBorder(borderRadius: BooklyRadius.rSm),
+        ),
       ),
 
-      navigationBarTheme: NavigationBarThemeData(
-        height: 64,
-        backgroundColor: c.surface,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        indicatorColor: Colors.transparent,
-        iconTheme: WidgetStateProperty.resolveWith((s) => IconThemeData(
-              size: 24,
-              color: s.contains(WidgetState.selected) ? c.textLink : c.textSecondary,
-            )),
-        labelTextStyle: WidgetStateProperty.resolveWith((s) => BooklyType.caption.copyWith(
-              fontWeight: FontWeight.w600,
-              color: s.contains(WidgetState.selected) ? c.textLink : c.textSecondary,
-            )),
+      // Square 16px frames; Burnished Amber core on the radio.
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) =>
+            states.contains(WidgetState.selected) ? c.accent : Colors.transparent),
+        checkColor: WidgetStateProperty.all(BooklyBrand.ink),
+        side: BorderSide(color: c.borderStrong, width: BooklyBorder.thin),
+        shape: RoundedRectangleBorder(borderRadius: BooklyRadius.rXs),
       ),
-
-      tabBarTheme: TabBarThemeData(
-        labelColor: c.text,
-        unselectedLabelColor: c.textSecondary,
-        labelStyle: BooklyType.button,
-        unselectedLabelStyle: BooklyType.button,
-        indicatorColor: c.accent,
-        indicatorSize: TabBarIndicatorSize.label,
-        dividerColor: c.border,
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) =>
+            states.contains(WidgetState.selected) ? c.accent : c.textSecondary),
       ),
-
-      bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: c.surfaceRaised,
-        surfaceTintColor: Colors.transparent,
-        modalBackgroundColor: c.surfaceRaised,
-        modalBarrierColor: c.scrim,
-        shape: const RoundedRectangleBorder(borderRadius: BooklyRadius.sheet),
-        showDragHandle: true,
-        dragHandleColor: c.borderStrong,
-        dragHandleSize: const Size(36, 4),
-      ),
-
-      dialogTheme: DialogThemeData(
-        backgroundColor: c.surfaceRaised,
-        surfaceTintColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(borderRadius: BooklyRadius.rXl),
-        titleTextStyle: BooklyType.h3.copyWith(color: c.text),
-        contentTextStyle: BooklyType.body.copyWith(color: c.textSecondary),
-      ),
-
-      snackBarTheme: SnackBarThemeData(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: c.surfaceRaised,
-        contentTextStyle: BooklyType.bodySm.copyWith(color: c.text),
-        actionTextColor: c.textLink,
-        shape: const RoundedRectangleBorder(borderRadius: BooklyRadius.rMd),
-        elevation: 0,
+      switchTheme: SwitchThemeData(
+        trackColor: WidgetStateProperty.resolveWith((states) =>
+            states.contains(WidgetState.selected) ? c.accent : c.surfaceSunken),
+        thumbColor: WidgetStateProperty.resolveWith((states) =>
+            states.contains(WidgetState.selected) ? BooklyBrand.ink : c.textSecondary),
       ),
 
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: c.accent,
         linearTrackColor: c.surfaceSunken,
         circularTrackColor: c.surfaceSunken,
-        linearMinHeight: 6,
-      ),
-
-      switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((s) =>
-            s.contains(WidgetState.selected) ? c.textOnAccent : c.textTertiary),
-        trackColor: WidgetStateProperty.resolveWith((s) =>
-            s.contains(WidgetState.selected) ? c.accent : c.surfaceSunken),
-        trackOutlineColor: WidgetStateProperty.resolveWith((s) =>
-            s.contains(WidgetState.selected) ? Colors.transparent : c.borderStrong),
       ),
 
       listTileTheme: ListTileThemeData(
         iconColor: c.textSecondary,
         textColor: c.text,
-        titleTextStyle: BooklyType.body.copyWith(color: c.text),
-        subtitleTextStyle: BooklyType.bodySm.copyWith(color: c.textSecondary),
+        contentPadding: const EdgeInsets.symmetric(horizontal: BooklySpace.md),
+      ),
+
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: c.surface,
+        contentTextStyle: BooklyType.bodySm.copyWith(color: c.text),
+        behavior: SnackBarBehavior.floating,
+        shape: const RoundedRectangleBorder(borderRadius: BooklyRadius.rSm),
+      ),
+
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: c.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(borderRadius: BooklyRadius.sheet),
+        showDragHandle: true,
+        dragHandleColor: c.borderStrong,
+      ),
+
+      dialogTheme: DialogThemeData(
+        backgroundColor: c.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(borderRadius: BooklyRadius.rSm),
+        titleTextStyle: BooklyType.headlineMd.copyWith(color: c.text),
+        contentTextStyle: BooklyType.bodyMd.copyWith(color: c.text),
       ),
 
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: c.accent,
-        selectionColor: c.accent.withValues(alpha: 0.28),
+        selectionColor: c.accent.withValues(alpha: 0.30),
         selectionHandleColor: c.accent,
       ),
+
+      tabBarTheme: TabBarThemeData(
+        labelColor: c.text,
+        unselectedLabelColor: c.textSecondary,
+        labelStyle: BooklyType.labelLg,
+        unselectedLabelStyle: BooklyType.labelLg,
+        indicatorColor: c.accent,
+        dividerColor: c.border,
+      ),
     );
+
+    return base;
   }
 }

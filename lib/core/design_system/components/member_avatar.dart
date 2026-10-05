@@ -51,8 +51,12 @@ class MemberAvatar extends StatelessWidget {
           child: image == null
               ? Text(
                   (initials ?? '').toUpperCase(),
-                  style: BooklyType.caption.copyWith(
-                      color: c.text, fontWeight: FontWeight.w700, fontSize: size * 0.32),
+                  style: BooklyType.labelMd.copyWith(
+                    color: c.text,
+                    fontWeight: FontWeight.w600,
+                    fontSize: size * 0.32,
+                    letterSpacing: size * 0.32 * 0.08,
+                  ),
                 )
               : null,
         ),

@@ -7,8 +7,8 @@ import 'bubble_kind.dart';
 
 /// Chat bubble: own / friend / Gemini.
 ///
-/// Gemini bubbles are labelled **in text** ("GEMINI" in Overline), not
-/// distinguished by colour alone (DESIGN.md §11).
+/// Gemini bubbles are labelled **in text** ("GEMINI" set as a `labelLg`
+/// caption), never distinguished by colour alone (DESIGN.md §11).
 class BooklyChatBubble extends StatelessWidget {
   const BooklyChatBubble({super.key, required this.kind, required this.text, this.author});
 
@@ -24,13 +24,15 @@ class BooklyChatBubble extends StatelessWidget {
     final bg = isAi ? c.aiSurface : (isOwn ? c.accentSubtle : c.surface);
     final fg = isAi ? c.aiText : (isOwn ? c.accentSubtleText : c.text);
     final border = isAi ? Border.all(color: c.aiBorder) : (isOwn ? null : Border.all(color: c.border));
-    const big = Radius.circular(16);
-    const tight = Radius.circular(4);
+    // Literary Clothbound §Shapes: 0.25rem base, no bubbly forms. The tail
+    // corner drops to 0.125rem so the bubble reads as a card, not a balloon.
+    const big = BooklyRadius.rSm;
+    const tight = BooklyRadius.rXs;
     final radius = BorderRadius.only(
-      topLeft: big,
-      topRight: big,
-      bottomLeft: isOwn ? big : tight,
-      bottomRight: isOwn ? tight : big,
+      topLeft: big.topLeft,
+      topRight: big.topRight,
+      bottomLeft: isOwn ? big.bottomLeft : tight.bottomLeft,
+      bottomRight: isOwn ? tight.bottomRight : big.bottomRight,
     );
     final label = isAi ? 'GEMINI' : author?.toUpperCase();
     return Align(
@@ -48,10 +50,13 @@ class BooklyChatBubble extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (label != null) ...[
-                    Text(label, style: BooklyType.overline.copyWith(color: fg.withValues(alpha: 0.8))),
-                    const SizedBox(height: BooklySpace.s1),
+                    Text(
+                      label.toUpperCase(),
+                      style: BooklyType.labelLg.copyWith(color: fg.withValues(alpha: 0.8)),
+                    ),
+                    const SizedBox(height: BooklySpace.xs),
                   ],
-                  Text(text, style: BooklyType.body.copyWith(color: fg)),
+                  Text(text, style: BooklyType.bodyMd.copyWith(color: fg)),
                 ],
               ),
             ),

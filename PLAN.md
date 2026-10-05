@@ -152,10 +152,18 @@ Feature-first means each feature owns its four layers; cross-feature access goes
 | **Display** | dev badge in About | none |
 
 ```bash
-flutter run --flavor dev  --dart-define-from-file=env/dev.json
-flutter run --flavor prod --dart-define-from-file=env/prod.json
-flutter build apk --flavor prod --dart-define-from-file=env/prod.json
+flutter run   --flavor dev  -t lib/main_dev.dart  --dart-define-from-file=env/dev.json
+flutter run   --flavor prod -t lib/main_prod.dart --dart-define-from-file=env/prod.json
+flutter build apk --flavor prod -t lib/main_prod.dart --dart-define-from-file=env/prod.json
 ```
+
+There is no `lib/main.dart` — the two entrypoints above are the only ones, and both
+require `-t`. Omitting it fails at startup rather than silently booting the wrong
+flavor's config.
+
+`bootstrap(flavor:)` re-checks the entrypoint's flavor against the `FLAVOR` value from
+the env file, so `main_prod.dart` started with `env/dev.json` stops with an error
+naming the command to run instead.
 
 `env/dev.example.json` is committed (placeholders only). The real files are gitignored.
 

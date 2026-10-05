@@ -14,6 +14,10 @@ analyzer:
     - build/**
     - android/**
     - ios/**
+    # Reference design kit — delivered as HTML/markdown snapshots of a prior
+    # system. Not part of the app; kept out of the lint budget so the gate
+    # only ever measures code that ships.
+    - branding/**
 
 linter:
   # The lint rules applied to this project can be customized in the

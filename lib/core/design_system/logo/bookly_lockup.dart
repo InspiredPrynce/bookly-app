@@ -4,9 +4,13 @@ import '../bookly_theme.dart';
 import '../bookly_typography.dart';
 import 'bookly_mark.dart';
 
-/// Mark + "Bookly" wordmark (Raleway 700, -0.02em).
+/// Mark + "Bookly" wordmark (Playfair Display 600, -0.02em).
 ///
 /// Minimum lockup width ~96; below that use [BooklyMark] alone.
+///
+/// Horizontal, for app bars and footers. Where the design stacks the mark
+/// above the wordmark — the splash masthead — compose [BooklyMark] and the
+/// wordmark directly rather than rotating this.
 class BooklyLockup extends StatelessWidget {
   const BooklyLockup({super.key, this.markSize = 40, this.color});
 
@@ -35,7 +39,7 @@ class BooklyLockup extends StatelessWidget {
                 fontSize: fs,
                 height: 1.0,
                 letterSpacing: -fs * 0.02,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: c,
               ),
             ),

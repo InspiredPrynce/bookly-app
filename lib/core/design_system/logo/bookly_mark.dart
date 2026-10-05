@@ -9,6 +9,9 @@ import '../bookly_theme.dart';
 ///
 /// Two circles = private circle. Lens = shared page. Spine = open book.
 /// Below 32 logical px: spine dropped, stroke thickened (small cut).
+///
+/// The lens is **Burnished Amber** — Literary Clothbound's primary mark of
+/// distinction — rather than the superseded system's oxblood.
 class BooklyMark extends StatelessWidget {
   const BooklyMark({super.key, this.size = 48, this.ringColor, this.lensColor});
 
@@ -17,7 +20,7 @@ class BooklyMark extends StatelessWidget {
   /// Override ring colour. Defaults: ink (light) / paper (dark).
   final Color? ringColor;
 
-  /// Override lens colour. Defaults: oxblood (light) / #C0525E (dark).
+  /// Override lens colour. Defaults: Burnished Amber (light) / gilt (dark).
   final Color? lensColor;
 
   @override
@@ -30,7 +33,7 @@ class BooklyMark extends StatelessWidget {
         size: Size.square(size),
         painter: _MarkPainter(
           ring: ringColor ?? (dark ? BooklyBrand.paper : BooklyBrand.ink),
-          lens: lensColor ?? (dark ? BooklyBrand.oxbloodDarkLens : BooklyBrand.oxblood),
+          lens: lensColor ?? (dark ? BooklyBrand.giltDark : BooklyBrand.gilt),
           size: size,
         ),
       ),

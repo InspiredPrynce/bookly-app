@@ -52,7 +52,6 @@ dependencies:
   image_picker: ^1.2.3
   flutter_image_compress: ^2.5.1
   intl: ^0.20.3
-  google_fonts: ^9.0.0
   shared_preferences: ^2.5.5
 
 dev_dependencies:
@@ -80,6 +79,46 @@ flutter:
     - assets/logo/3.0x/
     - assets/icon/
     - assets/sound/
+
+  # Literary Clothbound type stack — bundled, never fetched at runtime.
+  #
+  # Playfair Display: display / headlines   (the literary voice)
+  # Literata:         body / sustained reading
+  # Inter:            labels, metadata, reading metrics (the bibliographic voice)
+  #
+  # Bundled rather than pulled via `google_fonts`: runtime font fetching makes
+  # the first frame network-dependent and breaks test hermeticity, because it
+  # fires async HTTP inside FakeAsync where the future can never settle.
+  fonts:
+    - family: Playfair Display
+      fonts:
+        - asset: assets/fonts/PlayfairDisplay-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/PlayfairDisplay-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/PlayfairDisplay-MediumItalic.ttf
+          weight: 500
+          style: italic
+        - asset: assets/fonts/PlayfairDisplay-SemiBoldItalic.ttf
+          weight: 600
+          style: italic
+    - family: Literata
+      fonts:
+        - asset: assets/fonts/Literata-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Literata-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Literata-Italic.ttf
+          weight: 400
+          style: italic
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

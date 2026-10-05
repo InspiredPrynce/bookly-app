@@ -1,12 +1,34 @@
 import 'package:flutter/material.dart';
 
-/// Brand constants. Never use in widgets directly; use [BooklyColors] via context.
+/// Brand constants — Literary Clothbound.
+///
+/// Derived from classical publishing materials: rag paper, oak gall ink,
+/// bookbinder's gold leaf, crushed madder cloth.
+///
+/// Never use these in widgets directly; read [BooklyColors] from context so
+/// dark mode is handled for you.
 abstract final class BooklyBrand {
-  static const ink = Color(0xFF1B1714);
-  static const paper = Color(0xFFF4EEE3);
-  static const oxblood = Color(0xFF7A1F2B);
-  // Graphic-only lens color on dark grounds (never for text).
-  static const oxbloodDarkLens = Color(0xFFC0525E);
+  /// Warm Charcoal — letterpress ink absorbed into rag paper.
+  static const ink = Color(0xFF1C1A17);
+
+  /// Warm Paper — uncoated heavy stock (Light canvas).
+  static const paper = Color(0xFFF6F1E7);
+
+  /// Deep Ink — dark canvas, deliberately free of cold blue undertones.
+  static const deepInk = Color(0xFF12100E);
+
+  /// Soft Ivory — dark-mode primary text.
+  static const ivory = Color(0xFFF4EFE6);
+
+  /// Burnished Amber — gilt edges and spine foil. The primary mark of
+  /// distinction: active progress, bookmarks, highlights, focus.
+  static const gilt = Color(0xFFC8913D);
+  static const giltDark = Color(0xFFDFAC56);
+
+  /// Muted Oxblood — an editorial stamp of finality: reading-status seals,
+  /// critical notices, destructive actions.
+  static const oxblood = Color(0xFF7A2E2E);
+  static const oxbloodLight = Color(0xFFC66966);
 }
 
 /// Semantic color tokens. Light + dark. Read with `context.colors`.
@@ -63,78 +85,81 @@ class BooklyColors extends ThemeExtension<BooklyColors> {
 
   Color member(int index) => members[index % members.length];
 
+  /// Light Mode — "The Reading Desk".
   static const light = BooklyColors(
-    bg: Color(0xFFF4EEE3),
-    surface: Color(0xFFFBF8F2),
+    bg: Color(0xFFF6F1E7), // Warm Paper
+    surface: Color(0xFFFEF9EF),
     surfaceRaised: Color(0xFFFFFFFF),
-    surfaceSunken: Color(0xFFEBE3D5),
-    scrim: Color(0x7A1B1714),
-    text: Color(0xFF1B1714),
-    textSecondary: Color(0xFF5C534A),
-    textTertiary: Color(0xFF6B6258),
-    textDisabled: Color(0xFFA89D8D),
-    textOnAccent: Color(0xFFFBF8F2),
-    textLink: Color(0xFF7A1F2B),
-    border: Color(0xFFD9CFBD),
-    borderStrong: Color(0xFFB9AD98),
-    focusRing: Color(0xFF7A1F2B),
-    accent: Color(0xFF7A1F2B),
-    accentHover: Color(0xFF651823),
-    accentPressed: Color(0xFF52121C),
-    accentSubtle: Color(0xFFEFDCD9),
-    accentSubtleText: Color(0xFF5A1520),
-    success: Color(0xFF2F6B4F),
-    successSubtle: Color(0xFFDCEBE2),
+    surfaceSunken: Color(0xFFEDE8DE), // surface-container-high
+    scrim: Color(0x731C1A17), // overlay shroud, 45%
+    text: Color(0xFF1C1A17), // Warm Charcoal
+    textSecondary: Color(0xFF6A645A), // Weathered Vellum
+    textTertiary: Color(0xFF7C766E), // outline
+    textDisabled: Color(0xFFB5AFA3),
+    textOnAccent: Color(0xFFF4EFE6), // Soft Ivory, on Cloth & Foil
+    textLink: Color(0xFF7A2E2E), // oxblood reads ~7:1 on Warm Paper
+    border: Color(0xFFE6DEC9), // Muted Rule
+    borderStrong: Color(0xFFCDC5BC), // outline-variant
+    focusRing: Color(0xFFC8913D), // Burnished Amber, no halo
+    accent: Color(0xFFC8913D), // Burnished Amber
+    accentHover: Color(0xFFB07E30),
+    accentPressed: Color(0xFF986B28),
+    accentSubtle: Color(0xFFF7E9CE),
+    accentSubtleText: Color(0xFF624000),
+    success: Color(0xFF3E6B4A),
+    successSubtle: Color(0xFFDFE9DF),
     warning: Color(0xFF8A5A00),
-    warningSubtle: Color(0xFFF3E5C6),
-    danger: Color(0xFFC42B1C),
-    dangerSubtle: Color(0xFFF6D9D4),
+    warningSubtle: Color(0xFFF5E7C8),
+    danger: Color(0xFFBA1A1A),
+    dangerSubtle: Color(0xFFFFDAD6),
     info: Color(0xFF2C5A7A),
     infoSubtle: Color(0xFFD9E6EE),
-    aiSurface: Color(0xFFEBE7F0),
-    aiBorder: Color(0xFFCFC7DA),
-    aiText: Color(0xFF3B2F4F),
+    // Gilt-edged paper: Gemini output is framed as an inserted plate.
+    aiSurface: Color(0xFFFCF7EC),
+    aiBorder: Color(0xFFDCC591),
+    aiText: Color(0xFF1C1A17),
     members: [
-      Color(0xFFB4741C), Color(0xFF1F7A74), Color(0xFF7A3F7E),
-      Color(0xFF5B7A2A), Color(0xFF3F5F9A), Color(0xFFB4533A),
+      Color(0xFFA9741B), Color(0xFF2E6E63), Color(0xFF8E3E63),
+      Color(0xFF5E7A2E), Color(0xFF3F5A8A), Color(0xFFB4533A),
     ],
     imageDim: 1.0,
   );
 
+  /// Dark Mode — "The Night Salon".
   static const dark = BooklyColors(
-    bg: Color(0xFF14110F),
-    surface: Color(0xFF1B1714),
-    surfaceRaised: Color(0xFF241F1B),
-    surfaceSunken: Color(0xFF0F0D0B),
-    scrim: Color(0xA3000000),
-    text: Color(0xFFF4EEE3),
-    textSecondary: Color(0xFFBDB2A3),
-    textTertiary: Color(0xFF968B7D),
-    textDisabled: Color(0xFF5E564C),
-    textOnAccent: Color(0xFFF4EEE3),
-    textLink: Color(0xFFDE7B85),
-    border: Color(0xFF2E2823),
-    borderStrong: Color(0xFF4A4239),
-    focusRing: Color(0xFFDE7B85),
-    accent: Color(0xFFB8434F),
-    accentHover: Color(0xFFC5525E),
-    accentPressed: Color(0xFFA63844),
-    accentSubtle: Color(0xFF3A1A1E),
-    accentSubtleText: Color(0xFFF0B4BA),
-    success: Color(0xFF6FBF98),
-    successSubtle: Color(0xFF17291F),
+    bg: Color(0xFF12100E), // Deep Ink
+    surface: Color(0xFF181512), // Surface Dark
+    surfaceRaised: Color(0xFF1F1B17),
+    surfaceSunken: Color(0xFF0D0B09),
+    scrim: Color(0x73000000),
+    text: Color(0xFFF4EFE6), // Soft Ivory
+    textSecondary: Color(0xFFA89E8D), // Muted Subtitle
+    textTertiary: Color(0xFF8C8375),
+    textDisabled: Color(0xFF5E574C),
+    textOnAccent: Color(0xFF12100E), // on Gilt Gold
+    textLink: Color(0xFFC66966), // light oxblood clears 4.5:1 on Deep Ink
+    border: Color(0xFF2E2720), // Dark Rule
+    borderStrong: Color(0xFF453C33),
+    focusRing: Color(0xFFDFAC56),
+    accent: Color(0xFFDFAC56),
+    accentHover: Color(0xFFE8BC6D),
+    accentPressed: Color(0xFFC99A47),
+    accentSubtle: Color(0xFF2E2417),
+    accentSubtleText: Color(0xFFF0C778),
+    success: Color(0xFF7FBF98),
+    successSubtle: Color(0xFF16241A),
     warning: Color(0xFFE0B04A),
-    warningSubtle: Color(0xFF2C2410),
+    warningSubtle: Color(0xFF2A2210),
     danger: Color(0xFFF0786C),
-    dangerSubtle: Color(0xFF321815),
+    dangerSubtle: Color(0xFF33171A),
     info: Color(0xFF7FB3D6),
     infoSubtle: Color(0xFF132230),
-    aiSurface: Color(0xFF221D2B),
-    aiBorder: Color(0xFF3A3149),
-    aiText: Color(0xFFD8CDEA),
+    aiSurface: Color(0xFF1A1613),
+    aiBorder: Color(0xFF3E3323),
+    aiText: Color(0xFFF4EFE6),
     members: [
-      Color(0xFFE0A04A), Color(0xFF55C4BB), Color(0xFFC58AC9),
-      Color(0xFF9CC25A), Color(0xFF8AA8E6), Color(0xFFE68A72),
+      Color(0xFFE0A04A), Color(0xFF5FBFAE), Color(0xFFD489AC),
+      Color(0xFFA9C266), Color(0xFF8FA8E6), Color(0xFFE68A72),
     ],
     imageDim: 0.92,
   );
