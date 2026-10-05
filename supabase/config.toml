@@ -1,5 +1,31 @@
 # For detailed configuration reference documentation, visit:
 # https://supabase.com/docs/guides/local-development/cli/config
+#
+# ⚠️  LOCAL-DEV TEMPLATE — do NOT run `supabase config push` against this file.
+#
+# Every value below is tuned for a machine that does not exist in production
+# (localhost ports, a 1s email throttle, MFA off, a small pooler). Pushing it
+# would silently overwrite live project settings. Measured against
+# orekhamsdcbuercidrwd on 2026-10-05, a wholesale push would have:
+#
+#   auth.mfa.totp.enroll/verify_enabled   true -> false   (disables MFA)
+#   auth.email.max_frequency        1m0s -> 1s            (60x weaker throttle)
+#   auth.site_url        http://localhost:3000 -> http://127.0.0.1:3000
+#   auth.email.otp_length                   8 -> 6
+#   storage.analytics.enabled            true -> false
+#   db.pooler.default_pool_size          15 -> 20  and max_client_conn 200 -> 100
+#
+# `config push` leaves properties the file does NOT declare untouched, so to
+# change one live setting, push from a minimal config that declares only it:
+#
+#   1. write a throwaway <dir>/supabase/config.toml containing only, e.g.
+#        project_id = "bookly"
+#        [auth.email]
+#        enable_confirmations = false
+#   2. supabase config diff --workdir <dir> --project-ref <ref>
+#        -> gate on "counts": {"update": 1}; anything else, abort
+#   3. supabase config push --workdir <dir> --project-ref <ref> --yes
+#
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
 project_id = "bookly"
