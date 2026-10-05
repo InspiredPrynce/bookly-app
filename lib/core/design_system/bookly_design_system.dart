@@ -28,6 +28,10 @@ export 'components/bubble_kind.dart';
 export 'components/member_avatar.dart';
 export 'components/reading_progress_bar.dart';
 
+// Motion — the page transition itself, so navigation and design share one
+// definition of PLAN.md §4.7 rather than each holding a copy of it.
+export 'motion/shared_axis_x.dart';
+
 // Logo — one lockup construction per file.
 export 'logo/bookly_lockup.dart';
 export 'logo/bookly_mark.dart';

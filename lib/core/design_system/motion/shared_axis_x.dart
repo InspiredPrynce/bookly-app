@@ -127,8 +127,10 @@ class _EnterTransition extends StatelessWidget {
       opacity: _fade.animate(animation),
       child: ListenableBuilder(
         listenable: animation,
-        builder: (context, child) =>
-            Transform.translate(offset: slide.transform(animation), child: child),
+        builder: (context, child) => Transform.translate(
+          offset: slide.transform(animation.value),
+          child: child,
+        ),
         child: child,
       ),
     );
@@ -173,7 +175,7 @@ class _ExitTransition extends StatelessWidget {
         child: ListenableBuilder(
           listenable: animation,
           builder: (context, child) => Transform.translate(
-            offset: slide.transform(animation),
+            offset: slide.transform(animation.value),
             child: child,
           ),
           child: child,
