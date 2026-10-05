@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html class="h-full dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;1,7..72,400&amp;family=Playfair+Display:ital,wght@0,500;0,600;1,400&amp;family=Inter:wght@400;500;600&amp;family=Raleway:wght@600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config = { 
+  darkMode: "class", 
+  theme: { 
+    extend: { 
+      colors: { 
+        "bookly-bg": "#14110F",
+        "bookly-surface": "#1B1714",
+        "bookly-surface-raised": "#241F1B",
+        "bookly-surface-sunken": "#0F0D0B",
+        "bookly-border": "#2E2823",
+        "bookly-border-focus": "#4A4239",
+        "bookly-text": "#F4EEE3",
+        "bookly-text-secondary": "#BDB2A3",
+        "bookly-text-tertiary": "#968B7D",
+        "bookly-accent": "#B8434F",
+        "bookly-accent-hover": "#C5525E",
+        "bookly-link": "#DE7B85",
+        "bookly-gold": "#E3A857"
+      }, 
+      fontFamily: { 
+        "headline-lg-mobile": ["Playfair Display", "serif"], 
+        "body-md": ["Literata", "serif"], 
+        "headline-md": ["Playfair Display", "serif"], 
+        "label-lg": ["Inter", "sans-serif"], 
+        "headline-lg": ["Playfair Display", "serif"], 
+        "display-mobile": ["Playfair Display", "serif"], 
+        "body-lg": ["Literata", "serif"], 
+        "body-sm": ["Literata", "serif"], 
+        "label-sm": ["Inter", "sans-serif"], 
+        "headline-sm": ["Playfair Display", "serif"], 
+        "display": ["Playfair Display", "serif"], 
+        "label-md": ["Inter", "sans-serif"],
+        "raleway": ["Raleway", "sans-serif"]
+      }, 
+      fontSize: { 
+        "headline-lg-mobile": ["26px", { lineHeight: "34px", letterSpacing: "-0.01em", fontWeight: "600" }], 
+        "body-md": ["16px", { lineHeight: "26px", fontWeight: "400" }], 
+        "headline-md": ["22px", { lineHeight: "30px", fontWeight: "500" }], 
+        "label-lg": ["13px", { lineHeight: "18px", letterSpacing: "0.06em", fontWeight: "600" }], 
+        "headline-lg": ["30px", { lineHeight: "38px", letterSpacing: "-0.01em", fontWeight: "600" }], 
+        "display-mobile": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600" }], 
+        "body-lg": ["18px", { lineHeight: "30px", letterSpacing: "-0.005em", fontWeight: "400" }], 
+        "body-sm": ["14px", { lineHeight: "22px", fontWeight: "400" }], 
+        "label-sm": ["10px", { lineHeight: "14px", letterSpacing: "0.1em", fontWeight: "500" }], 
+        "headline-sm": ["18px", { lineHeight: "26px", fontWeight: "500" }], 
+        "display": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "600" }], 
+        "label-md": ["11px", { lineHeight: "16px", letterSpacing: "0.08em", fontWeight: "500" }] 
+      } 
+    } 
+  } 
+};</script><style>@layer base{html,body{min-height:100%;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style></head><body class="bg-bookly-bg text-bookly-text antialiased flex flex-col min-h-full"><header class="fixed top-0 w-full z-50 bg-[#14110F]/90 backdrop-blur-xl pt-safe border-b border-bookly-border"><div class="h-14 px-5 flex items-center justify-between"><button aria-label="Go Back" class="w-11 h-11 -ml-2 flex items-center justify-center text-bookly-text hover:text-bookly-link transition-colors" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[22px]">arrow_back</span></button><span class="font-label-lg text-label-lg uppercase tracking-wider text-bookly-text font-medium">Create Account</span><img alt="Profile" class="w-8 h-8 rounded-full object-cover border border-bookly-border" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-zELNKUPxaaoY9ahL3W-s3pkjUO3uLvFxLIXHmtIl1fMJAn0WZr86ztz9JsfvJwHQnaNf1_-l26QRg0VtZYSI0BuhqHxjm3Dv_xc7TuRzFdC46DfNv6F8PPXujQm3imWe_E0MPmtA8ZihMEjB8WEVmfW4uqN8eqVnymejJzMbHcH4U9Lnk1wWD7CTRxzqwbtV0ISYcSWFEeV4CZisYhfQdLoMx7xuVJieEKYWXL-rwmh56YARG1S6hA"/></div></header><main class="flex-1 flex flex-col relative w-full pt-14 pb-safe bg-bookly-bg px-5"><div class="flex flex-col w-full pb-8">
+<div class="flex flex-col items-center text-center mt-3 mb-6">
+<div class="w-12 h-12 mb-3 relative flex items-center justify-center">
+<img alt="Bookly emblem" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOW-6ikBeKPNdlZj3OjAL0vve4jLUDgJgGW4aLBLv7YJU_GwU0wF9uvI_ot0Su1MwcF1KxjJPUeNDs7VaRB8CwWCO2Z9sbMPaVC4zeUr5ncLniU40XRKuhW1s2m3_ILSkbMdYqhJ9ZEuxhiPTSDUulvS4A3lL-3VcRTK_5nPr3Zg7_BFWBdvq0h-xxyHhp_zn_URzVtkpRxInXyO431opazD1gd5mB_YQ8eMl06fpwA36UOu13d4vEcN1_fY0RCipmGR4"/>
+</div>
+<span class="font-raleway text-[11px] uppercase tracking-[0.2em] text-bookly-gold font-semibold mb-1">Bibliophile Register</span>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-bookly-text tracking-tight">Create Your Reader Profile</h1>
+<p class="font-body-sm text-body-sm text-bookly-text-secondary max-w-xs mt-1.5 leading-relaxed">
+      Join private reading circles and track literary dialogues across curated volumes.
+    </p>
+</div>
+<div class="bg-bookly-surface border border-bookly-border rounded-xl p-5 shadow-sm space-y-5">
+<div class="flex flex-col items-center">
+<label class="font-label-sm text-label-sm uppercase tracking-wider text-bookly-text-secondary mb-2 font-medium">Portrait &amp; Ex-Libris Seal</label>
+<div class="relative group cursor-pointer" id="avatar-container">
+<div class="w-20 h-20 rounded-2xl bg-bookly-surface-raised border border-bookly-border flex flex-col items-center justify-center overflow-hidden transition-all duration-200 shadow-inner group-hover:border-bookly-border-focus">
+<span class="material-symbols-outlined text-bookly-text-secondary text-2xl mb-0.5" id="avatar-icon">photo_camera</span>
+<span class="font-label-sm text-[9px] text-bookly-text-tertiary font-medium" id="avatar-text">Seal / Photo</span>
+<img alt="Avatar preview" class="w-full h-full object-cover hidden" id="avatar-preview" src=""/>
+</div>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-bookly-accent flex items-center justify-center text-bookly-text shadow-sm border border-bookly-surface">
+<span class="material-symbols-outlined text-[13px]">add</span>
+</div>
+<input accept="image/*" class="hidden" id="avatar-input" type="file"/>
+</div>
+<span class="font-label-sm text-label-sm text-bookly-text-tertiary mt-1.5">Tap to affix your seal or portrait</span>
+</div>
+<div class="space-y-4">
+<div class="flex flex-col">
+<label class="font-label-sm text-label-sm uppercase tracking-wider text-bookly-text-secondary font-medium mb-1.5 flex items-center gap-1.5" for="full-name">
+<span class="material-symbols-outlined text-sm text-bookly-gold">history_edu</span>
+          Full Name
+        </label>
+<div class="relative">
+<input class="w-full bg-bookly-surface-raised border border-bookly-border rounded-lg px-3.5 py-2.5 font-body-md text-body-md text-bookly-text placeholder:text-bookly-text-tertiary outline-none shadow-inner transition-colors focus:border-bookly-border-focus" id="full-name" name="fullname" placeholder="e.g. Virginia Woolf" type="text"/>
+</div>
+</div>
+<div class="flex flex-col">
+<label class="font-label-sm text-label-sm uppercase tracking-wider text-bookly-text-secondary font-medium mb-1.5 flex items-center gap-1.5" for="email">
+<span class="material-symbols-outlined text-sm text-bookly-gold">mail</span>
+          Email Address
+        </label>
+<div class="relative">
+<input class="w-full bg-bookly-surface-raised border border-bookly-border rounded-lg px-3.5 py-2.5 font-body-md text-body-md text-bookly-text placeholder:text-bookly-text-tertiary outline-none shadow-inner transition-colors focus:border-bookly-border-focus" id="email" name="email" placeholder="reader@clothbound.org" type="email"/>
+</div>
+</div>
+<div class="flex flex-col">
+<label class="font-label-sm text-label-sm uppercase tracking-wider text-bookly-text-secondary font-medium mb-1.5 flex items-center gap-1.5" for="password">
+<span class="material-symbols-outlined text-sm text-bookly-gold">key</span>
+          Secret Key / Password
+        </label>
+<div class="relative flex items-center">
+<input class="w-full bg-bookly-surface-raised border border-bookly-border rounded-lg pl-3.5 pr-11 py-2.5 font-body-md text-body-md text-bookly-text placeholder:text-bookly-text-tertiary outline-none shadow-inner transition-colors focus:border-bookly-border-focus" id="password" name="password" placeholder="••••••••••••" type="password"/>
+<button aria-label="Toggle password visibility" class="absolute right-2.5 w-8 h-8 flex items-center justify-center text-bookly-text-tertiary hover:text-bookly-text transition-colors" id="toggle-password" type="button">
+<span class="material-symbols-outlined text-lg" id="eye-icon">visibility</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-1.5 mt-2.5">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bookly-surface-raised border border-bookly-border text-bookly-text-secondary font-label-sm text-label-sm transition-colors duration-200" id="rule-length">
+<span class="material-symbols-outlined text-[13px] text-bookly-text-tertiary leading-none status-icon">remove</span>
+<span>8+ chars</span>
+</span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bookly-surface-raised border border-bookly-border text-bookly-text-secondary font-label-sm text-label-sm transition-colors duration-200" id="rule-number">
+<span class="material-symbols-outlined text-[13px] text-bookly-text-tertiary leading-none status-icon">remove</span>
+<span>1 number</span>
+</span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bookly-surface-raised border border-bookly-border text-bookly-text-secondary font-label-sm text-label-sm transition-colors duration-200" id="rule-symbol">
+<span class="material-symbols-outlined text-[13px] text-bookly-text-tertiary leading-none status-icon">remove</span>
+<span>1 symbol</span>
+</span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bookly-surface-raised border border-bookly-border text-bookly-text-secondary font-label-sm text-label-sm transition-colors duration-200" id="rule-upper">
+<span class="material-symbols-outlined text-[13px] text-bookly-text-tertiary leading-none status-icon">remove</span>
+<span>Uppercase</span>
+</span>
+</div>
+</div>
+<div class="flex flex-col">
+<div class="flex justify-between items-baseline mb-1.5">
+<label class="font-label-sm text-label-sm uppercase tracking-wider text-bookly-text-secondary font-medium flex items-center gap-1.5" for="bio">
+<span class="material-symbols-outlined text-sm text-bookly-gold">ink_pen</span>
+            Reader's Colophon / Short Bio
+          </label>
+<span class="font-label-sm text-label-sm text-bookly-text-tertiary">Optional</span>
+</div>
+<textarea class="w-full bg-bookly-surface-raised border border-bookly-border rounded-lg p-3.5 font-body-sm text-body-sm text-bookly-text placeholder:text-bookly-text-tertiary outline-none shadow-inner resize-none transition-colors focus:border-bookly-border-focus" id="bio" name="bio" placeholder="Tell your circle what you cherish reading — Victorian serials, French naturalism, modern verse, philosophical commentaries..." rows="3"></textarea>
+</div>
+</div>
+<div class="pt-2">
+<button class="w-full h-12 rounded-xl bg-bookly-accent hover:bg-bookly-accent-hover active:scale-[0.99] text-bookly-text font-label-lg text-label-lg uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2" id="submit-register" type="button">
+<span class="material-symbols-outlined text-bookly-text text-lg">auto_stories</span>
+<span>Create Account</span>
+</button>
+<p class="text-center mt-3 font-body-sm text-body-sm text-bookly-text-tertiary">
+        By continuing, you agree to our 
+        <a class="text-bookly-link font-medium underline underline-offset-2 hover:brightness-110" href="#terms">Library Charter</a> 
+        &amp; 
+        <a class="text-bookly-link font-medium underline underline-offset-2 hover:brightness-110" href="#privacy">Archival Privacy</a>.
+      </p>
+</div>
+</div>
+<div class="mt-6 mb-2 text-center">
+<div class="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-full bg-bookly-surface-raised border border-bookly-border shadow-sm">
+<span class="font-body-sm text-body-sm text-bookly-text-secondary">Already in a circle?</span>
+<a class="font-label-md text-label-md uppercase tracking-wider font-semibold text-bookly-link hover:underline transition-colors" href="#signin">
+        Sign In →
+      </a>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    const avatarContainer = document.getElementById('avatar-container');
+    const avatarInput = document.getElementById('avatar-input');
+    const avatarPreview = document.getElementById('avatar-preview');
+    const avatarIcon = document.getElementById('avatar-icon');
+    const avatarText = document.getElementById('avatar-text');
+
+    if (avatarContainer && avatarInput) {
+      avatarContainer.addEventListener('click', () => avatarInput.click());
+      avatarInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            avatarPreview.src = event.target.result;
+            avatarPreview.classList.remove('hidden');
+            if (avatarIcon) avatarIcon.classList.add('hidden');
+            if (avatarText) avatarText.classList.add('hidden');
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    const passwordInput = document.getElementById('password');
+    const togglePassword = document.getElementById('toggle-password');
+    const eyeIcon = document.getElementById('eye-icon');
+
+    if (togglePassword && passwordInput && eyeIcon) {
+      togglePassword.addEventListener('click', () => {
+        const isPassword = passwordInput.getAttribute('type') === 'password';
+        passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+        eyeIcon.textContent = isPassword ? 'visibility_off' : 'visibility';
+      });
+    }
+
+    const ruleLength = document.getElementById('rule-length');
+    const ruleNumber = document.getElementById('rule-number');
+    const ruleSymbol = document.getElementById('rule-symbol');
+    const ruleUpper = document.getElementById('rule-upper');
+
+    function updatePill(element, valid) {
+      if (!element) return;
+      const icon = element.querySelector('.status-icon');
+      if (valid) {
+        element.classList.remove('bg-bookly-surface-raised', 'text-bookly-text-secondary', 'border-bookly-border');
+        element.classList.add('bg-bookly-accent/20', 'text-bookly-text', 'border-bookly-accent');
+        if (icon) {
+          icon.textContent = 'check';
+          icon.classList.remove('text-bookly-text-tertiary');
+          icon.classList.add('text-bookly-link');
+        }
+      } else {
+        element.classList.remove('bg-bookly-accent/20', 'text-bookly-text', 'border-bookly-accent');
+        element.classList.add('bg-bookly-surface-raised', 'text-bookly-text-secondary', 'border-bookly-border');
+        if (icon) {
+          icon.textContent = 'remove';
+          icon.classList.remove('text-bookly-link');
+          icon.classList.add('text-bookly-text-tertiary');
+        }
+      }
+    }
+
+    if (passwordInput) {
+      passwordInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        updatePill(ruleLength, val.length >= 8);
+        updatePill(ruleNumber, /[0-9]/.test(val));
+        updatePill(ruleSymbol, /[^A-Za-z0-9]/.test(val));
+        updatePill(ruleUpper, /[A-Z]/.test(val));
+      });
+    }
+  })();
+</script></main></body></html>
