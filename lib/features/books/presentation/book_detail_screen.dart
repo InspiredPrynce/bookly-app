@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +11,9 @@ import '../../../core/errors/failure.dart';
 import '../../../core/snackbar/bookly_toast.dart';
 import '../../../core/snackbar/present_failure.dart';
 import '../../../core/widgets/error_view.dart';
+import '../../progress/application/book_progress_controller.dart';
+import '../../progress/application/book_progress_state.dart';
+import '../../progress/domain/item_status.dart';
 import '../application/book_detail_controller.dart';
 import '../application/book_detail_state.dart';
 import '../domain/book.dart';
@@ -32,6 +37,19 @@ import '../domain/link_kind.dart';
 ///
 /// A **hybrid** shows both, chapters first: §5.6 calls links
 /// "supplementary", and the order says so without a word of copy.
+///
+/// ## Two providers, because two things can be wrong at once
+///
+/// The book comes from `BookDetailController`; the ticks beside its
+/// rows come from `BookProgressController` — a different feature over a
+/// different table (PLAN.md §1.3 gives progress its own folder, and the
+/// rule is that cross-feature access goes through providers rather than
+/// reaching into another feature's `data/`).
+///
+/// One state object holding both would make a book whose progress failed
+/// to load look like a book that failed to load. Keeping them apart, the
+/// page still reads — rows honestly say `▸ Not started` — while the
+/// failure is reported beside it.
 ///
 /// There is deliberately no header chrome here — no `AppScaffold`
 /// lockup. A reader who tapped a book is one level deep and going
@@ -60,9 +78,20 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
     // them — the retry is [ErrorView]'s button, not a background loop.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+
       final s = ref.read(_provider);
       if (s.detail == null && !s.loading && s.failure == null) {
         ref.read(_provider.notifier).load();
+      }
+
+      // Progress starts on the same frame rather than after the book.
+      // It is a request over a different table, and gating it behind
+      // this one would put a whole round trip between the cover
+      // arriving and the ticks being right, for no benefit: neither
+      // needs the other, and both are read by the same screen.
+      final p = ref.read(_progressProvider);
+      if (p.progress == null && !p.loading && p.failure == null) {
+        ref.read(_progressProvider.notifier).load();
       }
     });
   }
@@ -72,10 +101,15 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
   NotifierProvider<BookDetailController, BookDetailState> get _provider =>
       bookDetailControllerProvider(widget.bookId);
 
+  /// Same rule, one family over: the reader's ticks for *this* book.
+  NotifierProvider<BookProgressController, BookProgressState>
+      get _progressProvider => bookProgressControllerProvider(widget.bookId);
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final state = ref.watch(_provider);
+    final progress = ref.watch(_progressProvider);
 
     // Exactly one surface reports a failure: the ErrorView below when
     // there is no book to show, this toast when there is. Both at once
@@ -86,6 +120,18 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
       if (failure == null) return;
       if (previous?.failure == failure) return;
       if (!next.hasBook) return;
+      presentFailure(failure);
+    });
+
+    // The second listener is gated on the same condition for the same
+    // reason, reached the other way round: while [ErrorView] is up it
+    // is already speaking for the page, and a toast about progress
+    // beside a book that never arrived answers a question nobody asked.
+    ref.listen(_progressProvider, (previous, next) {
+      final failure = next.failure;
+      if (failure == null) return;
+      if (previous?.failure == failure) return;
+      if (!ref.read(_provider).hasBook) return;
       presentFailure(failure);
     });
 
@@ -117,7 +163,7 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
                     child: Center(child: CircularProgressIndicator()),
                   )
                 else
-                  ..._body(context, state),
+                  ..._body(context, state, progress),
               ],
             ),
           ),
@@ -128,10 +174,15 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
 
   // ── Content ──────────────────────────────────────────────────────────────
 
-  List<Widget> _body(BuildContext context, BookDetailState state) {
+  List<Widget> _body(
+    BuildContext context,
+    BookDetailState state,
+    BookProgressState progress,
+  ) {
     final colors = context.colors;
     final detail = state.detail!;
     final book = detail.book;
+    final shown = progress.shown;
 
     // [BookCover] takes a nullable jacket precisely so that a book with
     // no uploaded cover — the ordinary case — renders blind-stamped
@@ -186,8 +237,12 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
           _ChapterRow(
             key: ValueKey(chapter.id),
             chapter: chapter,
-            onTap: () =>
-                context.push(Routes.chapter(widget.bookId, chapter.id)),
+            status: shown.chapterStatus(chapter.id),
+            pending: progress.isPending(chapter.id),
+            onTap: () => _openChapter(chapter),
+            onMark: () => unawaited(
+              ref.read(_progressProvider.notifier).finishChapter(chapter.id),
+            ),
           ),
       ],
 
@@ -195,12 +250,21 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
         if (detail.hasChapters) const SizedBox(height: BooklySpace.xl),
         const SizedBox(height: BooklySpace.lg),
         _section('Links', colors.textSecondary),
+        if (detail.links.length > 1) ...[
+          const SizedBox(height: BooklySpace.xs),
+          _linkProgress(context, detail.links.length, shown.finishedLinkCount),
+        ],
         const SizedBox(height: BooklySpace.xs),
         for (final link in detail.links)
           _LinkRow(
             key: ValueKey(link.id),
             link: link,
+            status: shown.linkStatus(link.id),
+            pending: progress.isPending(link.id),
             onTap: () => _open(link),
+            onMark: () => unawaited(
+              ref.read(_progressProvider.notifier).finishLink(link.id),
+            ),
           ),
       ],
 
@@ -229,17 +293,68 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
         style: BooklyType.labelLg.copyWith(color: color),
       );
 
+  /// §5.7's "links completed ÷ total": the count in tabular figures,
+  /// the bar under it.
+  ///
+  /// The bar is excluded from semantics because the count above it is
+  /// already a sentence — announced as well, a screen reader would hear
+  /// the same words twice, once for a number and once for a picture of
+  /// it. [CompletionBar] draws; the text speaks.
+  ///
+  /// Only drawn for more than one link: with a single item, "0 of 1
+  /// completed" restates the row a few pixels below it.
+  Widget _linkProgress(BuildContext context, int total, int finished) {
+    final colors = context.colors;
+    final complete = finished >= total;
+    final label = '$finished of $total completed';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: BooklyType.labelSm.copyWith(
+            color: complete ? colors.success : colors.textSecondary,
+            fontFeatures: BooklyType.numeric,
+          ),
+        ),
+        const SizedBox(height: BooklySpace.xs),
+        ExcludeSemantics(
+          child: CompletionBar(value: total == 0 ? 0 : finished / total),
+        ),
+      ],
+    );
+  }
+
   // ── Actions ──────────────────────────────────────────────────────────────
 
-  void _retry() => ref.read(_provider.notifier).load();
+  void _retry() {
+    ref.read(_provider.notifier).load();
+    ref.read(_progressProvider.notifier).load();
+  }
+
+  /// §5.7: a chapter row **is** the "Open" of a chapter.
+  ///
+  /// The write starts first and is not awaited: it is a record the
+  /// reader made an attempt, not a gate on the attempt succeeding, and
+  /// a network that cannot say so must not be the reason they cannot
+  /// read. If it does fail, it surfaces through the listener set up in
+  /// [build], which is still registered — pushing a route leaves this
+  /// screen on the stack underneath it.
+  void _openChapter(Chapter chapter) {
+    unawaited(
+      ref.read(_progressProvider.notifier).startChapter(chapter.id),
+    );
+    context.push(Routes.chapter(widget.bookId, chapter.id));
+  }
 
   /// §5.7: **Open** → `url_launcher`.
   ///
-  /// No progress write here. Opening is a *transition* (`item_progress =
-  /// reading`, `circle_events.started_link`) and those writes belong to
-  /// their own task — putting half of them here would leave the link row
-  /// claiming a status the database has not recorded, which is exactly
-  /// the kind of drift §5.6's derived-rule argument is about.
+  /// The progress write happens only once the link actually opened.
+  /// Crediting `item_progress = reading` before the launch would record
+  /// a transition the reader never made, and the `circle_events` row
+  /// that follows from it (migration 000006) is written by a trigger
+  /// with no way to find out it was wrong.
   Future<void> _open(BookLink link) async {
     final uri = Uri.tryParse(link.url);
     if (uri == null || !uri.hasScheme) {
@@ -252,7 +367,14 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
 
     try {
       final opened = await launchUrl(uri, mode: LaunchMode.platformDefault);
-      if (!opened && mounted) BooklyToast.error('That link could not be opened.');
+      if (!mounted) return;
+
+      if (!opened) {
+        BooklyToast.error('That link could not be opened.');
+        return;
+      }
+
+      unawaited(ref.read(_progressProvider.notifier).startLink(link.id));
     } catch (_) {
       if (mounted) BooklyToast.error('That link could not be opened.');
     }
@@ -301,6 +423,61 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
   }
 }
 
+/// Colour a row's status is drawn in.
+///
+/// Three themes, three answers, all measured against the row's own
+/// background (`BooklyColors.bg`) — the status is the only thing on the
+/// row that changes meaning, so it is the one thing that cannot be
+/// hard to read in whichever theme the reader chose:
+///
+/// | | Light | Dark | Night-paper |
+/// |---|---|---|---|
+/// | `notStarted` | 5.21:1 | 7.18:1 | 7.33:1 |
+/// | `reading` | 8.28:1 | 11.88:1 | 12.14:1 |
+/// | `finished` | 5.47:1 | 8.87:1 | 9.06:1 |
+///
+/// `accent` is deliberately *not* the "reading" colour: Burnished Amber
+/// on Warm Paper is 2.46:1, which is why the design system carries
+/// [BooklyColors.accentSubtleText] — the amber meant to be read rather
+/// than the amber meant to be filled.
+Color _statusColor(BooklyColors colors, ItemStatus status) =>
+    switch (status) {
+      ItemStatus.notStarted => colors.textSecondary,
+      ItemStatus.reading => colors.accentSubtleText,
+      ItemStatus.finished => colors.success,
+    };
+
+/// The secondary action a row offers — **Mark as read** / **Mark as
+/// watched** — as a real tap target rather than another bare `Text`.
+///
+/// A `TextButton` with its chrome taken off, rather than a
+/// `GestureDetector`: the chrome is not what makes it a button, and
+/// dropping it would also drop the disabled state, which this row
+/// wants, because the control goes inert while its write is in flight.
+Widget _rowAction({
+  required String label,
+  required bool enabled,
+  required VoidCallback onPressed,
+  required Color color,
+}) =>
+    TextButton(
+      onPressed: enabled ? onPressed : null,
+      style: TextButton.styleFrom(
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        padding: const EdgeInsets.symmetric(
+          horizontal: BooklySpace.xs,
+          vertical: BooklySpace.xs,
+        ),
+      ),
+      child: Text(
+        label,
+        style: BooklyType.button.copyWith(
+          color: enabled ? color : color.withValues(alpha: 0.4),
+        ),
+      ),
+    );
+
 /// One chapter, in the order the reader walks them.
 ///
 /// Flat with a rule under it rather than a card, matching the catalog:
@@ -310,11 +487,39 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
 /// The trailing **Read** label is not decoration. There is no chevron
 /// glyph vendored (§4.3 keeps the set tiny), and a row with no visible
 /// affordance is a row a reader has to be told is tappable.
+///
+/// **Mark as read** sits under it and only exists while there is
+/// something left to mark. §5.7 gives the affordance to link rows,
+/// where watching happens off-app; a chapter gets the same one because
+/// the reader may well have read it somewhere the app cannot see —
+/// their circle's feed is fed by the same `finished_chapter` either
+/// way, and asking them to re-read a chapter to say so would be worse
+/// than a button.
 class _ChapterRow extends StatelessWidget {
-  const _ChapterRow({super.key, required this.chapter, required this.onTap});
+  const _ChapterRow({
+    super.key,
+    required this.chapter,
+    required this.status,
+    required this.pending,
+    required this.onTap,
+    required this.onMark,
+  });
 
   final Chapter chapter;
+  final ItemStatus status;
+  final bool pending;
   final VoidCallback onTap;
+  final VoidCallback onMark;
+
+  bool get _finished => status == ItemStatus.finished;
+
+  /// §5.7 names the two endpoints; the middle state is left to us, and
+  /// "reading" is the verb the reader would use for it.
+  String get _statusLine => switch (status) {
+        ItemStatus.notStarted => '▸ Not started',
+        ItemStatus.reading => '▸ Reading…',
+        ItemStatus.finished => '▸ Read ✓',
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -333,7 +538,11 @@ class _ChapterRow extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: BooklySpace.md),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              // Top, not centre: the row is now two lines deep on the
+              // left and two labels deep on the right, and centring
+              // would hang the trailing pair off the middle of a title
+              // that may have wrapped to three.
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(
                   width: 24,
@@ -345,15 +554,40 @@ class _ChapterRow extends StatelessWidget {
                 ),
                 const SizedBox(width: BooklySpace.sm),
                 Expanded(
-                  child: Text(
-                    chapter.title,
-                    style: BooklyType.bodyMd.copyWith(color: colors.text),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        chapter.title,
+                        style: BooklyType.bodyMd.copyWith(color: colors.text),
+                      ),
+                      const SizedBox(height: BooklySpace.xs),
+                      Text(
+                        _statusLine,
+                        style: BooklyType.labelSm
+                            .copyWith(color: _statusColor(colors, status)),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: BooklySpace.sm),
-                Text(
-                  'Read',
-                  style: BooklyType.button.copyWith(color: colors.accent),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Read',
+                      style: BooklyType.button.copyWith(color: colors.textLink),
+                    ),
+                    if (!_finished) ...[
+                      const SizedBox(height: BooklySpace.xs),
+                      _rowAction(
+                        label: 'Mark as read',
+                        enabled: !pending,
+                        color: colors.textLink,
+                        onPressed: onMark,
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -375,15 +609,56 @@ class _ChapterRow extends StatelessWidget {
 ///
 /// Like [_ChapterRow], the trailing label exists because no chevron is
 /// vendored and the row has to advertise its own affordance.
+///
+/// The status and the kind share a line rather than stacking, because
+/// together they are one fact — "this, in this state" — and three lines
+/// per row is a list a reader has to scroll past to reach the link they
+/// came for. [Wrap] rather than [Row] so that a narrow screen and a
+/// long kind label run on instead of overflowing the row.
 class _LinkRow extends StatelessWidget {
-  const _LinkRow({super.key, required this.link, required this.onTap});
+  const _LinkRow({
+    super.key,
+    required this.link,
+    required this.status,
+    required this.pending,
+    required this.onTap,
+    required this.onMark,
+  });
 
   final BookLink link;
+  final ItemStatus status;
+  final bool pending;
   final VoidCallback onTap;
+  final VoidCallback onMark;
+
+  bool get _finished => status == ItemStatus.finished;
 
   BooklyIconKind get _glyph => switch (link.kind) {
         LinkKind.youtube => BooklyIconKind.circlePlay,
         LinkKind.podcast => BooklyIconKind.micVocal,
+      };
+
+  /// §5.7 spells these as `▸ Start ▶` and `▸ Watched ✓`. The middle
+  /// state it does not name, and "started" would be wrong for something
+  /// half-watched — so the verb is what the reader is doing.
+  String get _statusLine => switch (status) {
+        ItemStatus.notStarted => '▸ Start ▶',
+        ItemStatus.reading => switch (link.kind) {
+            LinkKind.youtube => '▸ Watching…',
+            LinkKind.podcast => '▸ Listening…',
+          },
+        ItemStatus.finished => switch (link.kind) {
+            LinkKind.youtube => '▸ Watched ✓',
+            LinkKind.podcast => '▸ Listened ✓',
+          },
+      };
+
+  /// §5.7's words, and they are the right ones: the reader did not read
+  /// a video, and saying "finished" would leave them to work out what
+  /// was finished.
+  String get _markLabel => switch (link.kind) {
+        LinkKind.youtube => 'Mark as watched',
+        LinkKind.podcast => 'Mark as listened',
       };
 
   @override
@@ -418,18 +693,44 @@ class _LinkRow extends StatelessWidget {
                             BooklyType.bodyMd.copyWith(color: colors.text),
                       ),
                       const SizedBox(height: BooklySpace.xs),
-                      Text(
-                        link.kind.label.toUpperCase(),
-                        style: BooklyType.labelSm
-                            .copyWith(color: colors.textTertiary),
+                      Wrap(
+                        spacing: BooklySpace.xs,
+                        runSpacing: BooklySpace.xs,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            _statusLine,
+                            style: BooklyType.labelSm
+                                .copyWith(color: _statusColor(colors, status)),
+                          ),
+                          Text(
+                            link.kind.label.toUpperCase(),
+                            style: BooklyType.labelSm
+                                .copyWith(color: colors.textTertiary),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: BooklySpace.sm),
-                Text(
-                  'Open',
-                  style: BooklyType.button.copyWith(color: colors.accent),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Open',
+                      style: BooklyType.button.copyWith(color: colors.textLink),
+                    ),
+                    if (!_finished) ...[
+                      const SizedBox(height: BooklySpace.xs),
+                      _rowAction(
+                        label: _markLabel,
+                        enabled: !pending,
+                        color: colors.textLink,
+                        onPressed: onMark,
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),

@@ -981,19 +981,19 @@ Settings
 
 ## Phase 1 · Auth · Books · Tracking
 
-- [ ] Register / Login / **email-only** password reset / Logout (§3.1)
-- [ ] Auth error → tone mapping (§3.2)
-- [ ] `EditProfileScreen` + avatar upload
-- [ ] `CreateBookScreen`: title, authors[], about, cover, chapters, **links** (§5.1–5.2)
-- [ ] **`book_links` CRUD** — add/edit/remove YouTube + podcast links, reorder via `position`, URL validation (§5.2)
-- [ ] PDF/EPUB optional upload → Supabase Storage
-- [ ] Publish validation `chapters >= 1 || links >= 1` (§5.3)
-- [ ] `CatalogScreen` (public catalog)
-- [ ] `BookDetailScreen` — **chapter branch and link branch** (§5.7)
+- [x] Register / Login / **email-only** password reset / Logout (§3.1)
+- [x] Auth error → tone mapping (§3.2)
+- [x] `EditProfileScreen` + avatar upload
+- [x] `CreateBookScreen`: title, authors[], about, cover, chapters, **links** (§5.1–5.2)
+- [x] **`book_links` CRUD** — add/edit/remove YouTube + podcast links, reorder via `position`, URL validation (§5.2)
+- [x] PDF/EPUB optional upload → Supabase Storage
+- [x] Publish validation `chapters >= 1 || links >= 1` (§5.3)
+- [x] `CatalogScreen` (public catalog)
+- [x] `BookDetailScreen` — **chapter branch and link branch** (§5.7)
 - [ ] `ReadingScreen` — position only, no timer; `read_count` (§5.4)
-- [ ] `item_progress` writes; chapter/link Open → `reading`, Mark → `finished`
+- [x] `item_progress` writes; chapter/link Open → `reading`, Mark → `finished`
 - [ ] `reading_notes` (3 scopes) with **private-by-default** UI (§5.5)
-- [ ] Night-paper reading theme (§4.10)
+- [x] Night-paper reading theme (§4.10)
 - [ ] Unit + widget tests per section
 
 **Exit:** a user can register, create a book with chapters *and/or* links, read/watch it, take private notes, and see correct progress.

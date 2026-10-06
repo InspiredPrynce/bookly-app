@@ -25,6 +25,7 @@ export 'reading_theme_mode.dart';
 // Components — split per PLAN.md §0.1 (one enum per file, no unrelated
 // classes sharing a file).
 export 'components/book_cover.dart';
+export 'components/completion_bar.dart';
 export 'components/bookly_chat_bubble.dart';
 export 'components/bubble_kind.dart';
 export 'components/member_avatar.dart';
